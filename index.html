@@ -1,0 +1,1862 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>社工個案地理管理系統｜概念示範版 v4</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --red:#ef4444;--red-bg:#fef2f2;--red-border:#fecaca;
+  --orange:#f97316;--orange-bg:#fff7ed;--orange-border:#fed7aa;
+  --green:#16a34a;--green-bg:#f0fdf4;--green-border:#bbf7d0;
+  --blue:#2563eb;--blue-bg:#eff6ff;--blue-border:#bfdbfe;
+  --gray:#6b7280;--surface:#ffffff;--bg:#f8fafc;
+  --border:#e2e8f0;--text:#1e293b;--muted:#64748b;
+  --font:'Noto Sans TC',sans-serif;
+}
+body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column;overflow:hidden;font-size:13px;}
+
+/* TOP BAR */
+.topbar{height:52px;background:white;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:14px;flex-shrink:0;box-shadow:0 1px 3px rgba(0,0,0,.04);}
+.topbar-logo{font-size:15px;font-weight:600;color:var(--text);}
+.topbar-logo span{color:var(--blue);}
+.topbar-badge{font-size:10px;padding:2px 8px;background:#fef3c7;color:#92400e;border-radius:4px;border:1px solid #fde68a;font-weight:500;}
+.topbar-r{margin-left:auto;display:flex;align-items:center;gap:10px;}
+.topbar-stat{display:flex;flex-direction:column;align-items:flex-end;}
+.ts-l{font-size:10px;color:var(--muted);}
+.ts-v{font-size:13px;font-weight:600;}
+.date-badge{font-size:11px;color:var(--muted);padding:4px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;}
+
+/* MAIN */
+.main{display:flex;flex:1;overflow:hidden;}
+
+/* LEFT PANEL */
+.lp{width:260px;background:white;border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;}
+.lp-head{padding:12px 14px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.search-wrap{position:relative;margin-bottom:8px;}
+.search-input{width:100%;padding:7px 10px 7px 30px;border:1px solid var(--border);border-radius:6px;font-family:var(--font);font-size:12px;color:var(--text);background:var(--bg);outline:none;transition:border-color .2s;}
+.search-input:focus{border-color:#93c5fd;}
+.search-icon{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;}
+.filter-row{display:flex;gap:5px;}
+.fchip{font-size:10px;padding:3px 8px;border-radius:20px;border:1px solid var(--border);background:white;color:var(--muted);cursor:pointer;transition:all .15s;font-family:var(--font);}
+.fchip.all.act{background:#eff6ff;border-color:#93c5fd;color:var(--blue);}
+.fchip.urgent.act{background:var(--red-bg);border-color:var(--red-border);color:var(--red);}
+.fchip.watch.act{background:var(--orange-bg);border-color:var(--orange-border);color:var(--orange);}
+.fchip.stable.act{background:var(--green-bg);border-color:var(--green-border);color:var(--green);}
+
+/* Case list */
+.case-list{flex:1;overflow-y:auto;padding:6px 0;}
+.case-item{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;cursor:pointer;transition:background .15s;border-left:3px solid transparent;}
+.case-item:hover{background:#f8fafc;}
+.case-item.selected{background:#eff6ff;border-left-color:var(--blue);}
+.case-item.urgent{border-left-color:var(--red);}
+.case-item.urgent.selected{background:var(--red-bg);}
+.case-cb{width:15px;height:15px;border:1.5px solid var(--border);border-radius:3px;flex-shrink:0;margin-top:2px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.case-cb.checked{background:var(--blue);border-color:var(--blue);}
+.case-cb.checked::after{content:'✓';color:white;font-size:9px;}
+.case-info{flex:1;min-width:0;}
+.case-id{font-size:12px;font-weight:600;color:var(--text);}
+.case-type{font-size:10px;color:var(--muted);margin-top:1px;}
+.case-meta{display:flex;align-items:center;gap:5px;margin-top:4px;}
+.risk-badge{font-size:9px;padding:1px 6px;border-radius:3px;font-weight:500;}
+.risk-urgent{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);}
+.risk-watch{background:var(--orange-bg);color:var(--orange);border:1px solid var(--orange-border);}
+.risk-stable{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);}
+.last-visit{font-size:10px;color:var(--muted);}
+.overdue{color:var(--red) !important;font-weight:500;}
+
+/* Route bar */
+.route-bar{padding:10px 14px;border-top:1px solid var(--border);background:var(--bg);flex-shrink:0;}
+.route-count{font-size:11px;color:var(--muted);margin-bottom:6px;}
+.route-count strong{color:var(--text);}
+.route-btn{width:100%;padding:9px;background:var(--blue);color:white;border:none;border-radius:7px;font-family:var(--font);font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:background .15s;}
+.route-btn:hover{background:#1d4ed8;}
+.route-btn:disabled{background:#cbd5e1;cursor:not-allowed;}
+
+/* MAP */
+#map{flex:1;z-index:1;}
+.leaflet-container{background:#e8ecf0 !important;}
+
+/* RIGHT PANEL */
+.rp{width:280px;background:white;border-left:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;}
+.rp-head{padding:12px 14px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.rp-title{font-size:12px;font-weight:600;color:var(--text);}
+.rp-body{flex:1;overflow-y:auto;padding:14px;}
+.empty-panel{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:10px;color:var(--muted);text-align:center;}
+.empty-icon{font-size:32px;opacity:.3;}
+.empty-txt{font-size:11px;line-height:1.7;max-width:160px;}
+.detail-card{display:none;}
+.detail-card.show{display:block;}
+.detail-id{font-size:18px;font-weight:700;color:var(--text);margin-bottom:2px;}
+.detail-type{font-size:11px;color:var(--muted);margin-bottom:12px;}
+.detail-section{margin-bottom:14px;}
+.detail-sec-title{font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+.detail-field{display:flex;justify-content:space-between;align-items:flex-start;padding:5px 0;border-bottom:1px solid #f1f5f9;font-size:11px;}
+.detail-field:last-child{border-bottom:none;}
+.df-label{color:var(--muted);flex-shrink:0;margin-right:8px;}
+.df-value{color:var(--text);text-align:right;font-weight:500;}
+.action-btn{width:100%;padding:8px;border-radius:6px;font-family:var(--font);font-size:11px;cursor:pointer;transition:all .15s;font-weight:500;margin-bottom:6px;display:flex;align-items:center;justify-content:center;gap:5px;}
+.btn-maps{background:white;border:1px solid var(--border);color:var(--text);}
+.btn-maps:hover{border-color:#93c5fd;color:var(--blue);}
+.btn-visit{background:var(--blue);border:none;color:white;}
+.btn-visit:hover{background:#1d4ed8;}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-thumb{background:#e2e8f0;border-radius:2px;}
+
+/* Custom hover history tooltip */
+.hist-tip{font-family:var(--font);min-width:220px;max-width:260px;}
+.hist-tip-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid #f1f5f9;}
+.hist-tip-id{font-weight:700;font-size:13px;color:#1e293b;}
+.hist-tip-type{font-size:10px;color:#64748b;}
+.hist-row{display:flex;gap:7px;padding:4px 0;border-bottom:1px solid #f8fafc;}
+.hist-row:last-child{border-bottom:none;}
+.hist-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:4px;}
+.hist-body{flex:1;min-width:0;}
+.hist-date{font-size:9px;color:#94a3b8;font-weight:500;}
+.hist-summary{font-size:10.5px;color:#334155;line-height:1.5;margin-top:1px;}
+.hist-more{font-size:9px;color:#2563eb;text-align:center;margin-top:6px;padding-top:5px;border-top:1px solid #f1f5f9;}
+
+/* Timeline in detail panel */
+.timeline{display:flex;flex-direction:column;}
+.tl-item{display:flex;gap:9px;padding:8px 0;position:relative;}
+.tl-item:not(:last-child)::before{content:'';position:absolute;left:5px;top:22px;bottom:-2px;width:1px;background:#e2e8f0;}
+.tl-dot{width:11px;height:11px;border-radius:50%;border:2.5px solid white;flex-shrink:0;margin-top:2px;z-index:1;box-shadow:0 0 0 1px #e2e8f0;}
+.tl-content{flex:1;min-width:0;}
+.tl-top{display:flex;align-items:baseline;justify-content:space-between;gap:6px;}
+.tl-date{font-size:11px;font-weight:600;color:var(--text);}
+.tl-worker{font-size:10px;color:var(--muted);}
+.tl-summary{font-size:11px;color:var(--text);line-height:1.6;margin-top:3px;}
+.tl-toggle{font-size:10px;color:var(--blue);cursor:pointer;text-align:center;padding:6px 0 2px;}
+.tl-toggle:hover{text-decoration:underline;}
+.tl-hidden{display:none;}
+.tl-item.clickable{cursor:pointer;border-radius:6px;transition:background .15s;margin:0 -8px;padding:8px 8px;}
+.tl-item.clickable:hover{background:#f8fafc;}
+.tl-item.clickable .tl-summary::after{content:'查看完整紀錄 ›';display:block;font-size:9px;color:var(--blue);margin-top:4px;font-weight:500;}
+
+/* RECORD DETAIL MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:2000;align-items:center;justify-content:center;backdrop-filter:blur(2px);}
+.modal-overlay.show{display:flex;}
+.modal-card{background:white;border-radius:14px;width:560px;max-width:92vw;max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.25);}
+.modal-top{position:sticky;top:0;background:white;z-index:5;border-radius:14px 14px 0 0;border-bottom:1px solid var(--border);}
+.modal-head{padding:16px 22px 10px;display:flex;align-items:flex-start;justify-content:space-between;}
+.modal-head-l .m-date{font-size:16px;font-weight:700;color:var(--text);}
+.modal-head-l .m-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+.modal-close{background:var(--bg);border:1px solid var(--border);border-radius:7px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);font-size:14px;flex-shrink:0;transition:all .15s;}
+.modal-close:hover{background:#fee2e2;color:var(--red);border-color:var(--red-border);}
+.modal-head-r{display:flex;align-items:center;gap:6px;flex-shrink:0;}
+.icon-btn{background:var(--bg);border:1px solid var(--border);border-radius:7px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);font-size:13px;transition:all .15s;}
+.icon-btn:hover{border-color:#93c5fd;color:var(--blue);background:var(--blue-bg);}
+.icon-btn.danger:hover{border-color:var(--red-border);color:var(--red);background:var(--red-bg);}
+.add-case-btn{width:100%;padding:8px;border-radius:7px;border:1px dashed #93c5fd;background:var(--blue-bg);color:var(--blue);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;}
+.add-case-btn:hover{background:#dbeafe;}
+.detail-top-row{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;}
+.detail-actions{display:flex;gap:6px;flex-shrink:0;}
+.detail-sec-title-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+.add-visit-btn{font-size:10px;padding:4px 9px;border-radius:20px;border:1px solid #93c5fd;background:var(--blue-bg);color:var(--blue);cursor:pointer;font-family:var(--font);font-weight:600;white-space:nowrap;}
+.add-visit-btn:hover{background:#dbeafe;}
+
+/* FORM MODAL */
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.form-row.full{grid-template-columns:1fr;}
+.form-field label{display:block;font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;}
+.form-field input,.form-field select,.form-field textarea{width:100%;padding:7px 9px;border:1px solid var(--border);border-radius:6px;font-family:var(--font);font-size:12px;color:var(--text);background:var(--bg);outline:none;resize:vertical;}
+.form-field input:focus,.form-field select:focus,.form-field textarea:focus{border-color:#93c5fd;}
+.form-section-title{font-size:10px;font-weight:700;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin:16px 0 8px;padding-top:10px;border-top:1px solid #f1f5f9;}
+.form-section-title:first-child{margin-top:0;padding-top:0;border-top:none;}
+.pick-loc-row{display:flex;gap:8px;align-items:flex-end;}
+.pick-loc-btn{padding:7px 12px;border-radius:6px;border:1px solid var(--border);background:white;color:var(--text);font-family:var(--font);font-size:11px;cursor:pointer;white-space:nowrap;}
+.pick-loc-btn.active{background:var(--blue);color:white;border-color:var(--blue);}
+.form-actions{display:flex;gap:8px;margin-top:16px;position:sticky;bottom:0;background:white;padding-top:10px;}
+.form-btn{flex:1;padding:10px;border-radius:7px;font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;border:none;}
+.form-btn.primary{background:var(--blue);color:white;}
+.form-btn.primary:hover{background:#1d4ed8;}
+.form-btn.secondary{background:var(--bg);color:var(--text);border:1px solid var(--border);}
+.form-btn.secondary:hover{background:#eef2f7;}
+.status-select-row{display:flex;align-items:center;gap:8px;}
+.status-select-row select{flex-shrink:0;width:110px;}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1e293b;color:white;padding:10px 20px;border-radius:8px;font-size:12px;box-shadow:0 8px 24px rgba(0,0,0,.2);z-index:3000;opacity:0;transition:opacity .25s;pointer-events:none;}
+.toast.show{opacity:1;}
+.modal-tabs{display:flex;gap:2px;padding:0 18px;overflow-x:auto;}
+.modal-tab{padding:8px 11px;font-size:11px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all .15s;font-family:var(--font);background:none;border-top:none;border-left:none;border-right:none;}
+.modal-tab:hover{color:var(--text);}
+.modal-tab.active{color:var(--blue);border-bottom-color:var(--blue);font-weight:700;}
+.modal-body{padding:16px 22px 22px;}
+.tab-panel{display:none;padding-top:2px;}
+.tab-panel.active{display:block;}
+
+.m-risk-badge{display:inline-block;font-size:10px;padding:3px 10px;border-radius:5px;font-weight:600;margin-bottom:14px;}
+.m-section{margin-bottom:16px;}
+.m-sec-title{font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:7px;}
+.m-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px;}
+.m-field{background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 10px;}
+.m-field-l{font-size:9px;color:var(--muted);margin-bottom:2px;}
+.m-field-v{font-size:12px;color:var(--text);font-weight:500;}
+.m-text-block{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:11px 13px;font-size:12px;color:var(--text);line-height:1.7;}
+.m-services{display:flex;flex-wrap:wrap;gap:5px;}
+.m-service-tag{font-size:10px;padding:3px 9px;background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border);border-radius:20px;}
+
+/* S/O blocks */
+.so-block{margin-bottom:12px;}
+.so-label{display:flex;align-items:center;gap:6px;font-size:10px;font-weight:700;letter-spacing:1px;margin-bottom:6px;color:var(--text);}
+.so-tag{width:20px;height:20px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:white;flex-shrink:0;}
+.so-tag.s{background:#0ea5e9;}
+.so-tag.o{background:#8b5cf6;}
+
+/* Dimension + SWOT */
+.dim-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.dim-card{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 11px;}
+.dim-card-label{font-size:9px;font-weight:700;color:var(--blue);margin-bottom:4px;letter-spacing:.5px;}
+.dim-card-text{font-size:11px;color:var(--text);line-height:1.6;}
+.swot-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;}
+.swot-cell{border-radius:8px;padding:10px 11px;border:1px solid;}
+.swot-cell.s{background:#f0fdf4;border-color:#bbf7d0;}
+.swot-cell.w{background:#fef2f2;border-color:#fecaca;}
+.swot-cell.o{background:#eff6ff;border-color:#bfdbfe;}
+.swot-cell.t{background:#fffbeb;border-color:#fde68a;}
+.swot-label{font-size:9px;font-weight:700;margin-bottom:4px;letter-spacing:.5px;}
+.swot-cell.s .swot-label{color:#16a34a;}
+.swot-cell.w .swot-label{color:#dc2626;}
+.swot-cell.o .swot-label{color:#2563eb;}
+.swot-cell.t .swot-label{color:#d97706;}
+.swot-text{font-size:10.5px;color:var(--text);line-height:1.55;}
+
+/* Plan */
+.plan-row{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:11px 13px;margin-bottom:8px;}
+.plan-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;}
+.plan-label{font-size:11px;font-weight:600;color:var(--text);}
+.plan-status{font-size:9px;padding:2px 8px;border-radius:10px;font-weight:600;}
+.plan-status.st-new{background:var(--blue-bg);color:var(--blue);}
+.plan-status.st-cont{background:#f1f5f9;color:#64748b;}
+.plan-status.st-adj{background:var(--orange-bg);color:var(--orange);}
+.plan-status.st-done{background:var(--green-bg);color:var(--green);}
+.plan-text{font-size:11.5px;color:var(--text);line-height:1.6;}
+
+/* Genogram */
+.geno-wrap{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;}
+.geno-legend{display:flex;flex-wrap:wrap;gap:11px;font-size:9.5px;color:var(--muted);padding-top:2px;}
+.gl-item{display:flex;align-items:center;gap:4px;}
+.gl-line{width:18px;height:0;border-top:2px solid #1e293b;display:inline-block;}
+.gl-line.dashed{border-top-style:dashed;}
+.gl-box-blue{width:11px;height:11px;border:2px solid var(--blue);border-radius:2px;display:inline-block;}
+.geno-empty{text-align:center;color:var(--muted);font-size:12px;line-height:1.9;padding:36px 14px;background:var(--bg);border:1px dashed var(--border);border-radius:10px;}
+
+/* Leaflet tooltip override for history hover card */
+.leaflet-tooltip.hist-leaflet-tip{background:white;border:1px solid var(--border);border-radius:10px;padding:10px 12px;box-shadow:0 6px 20px rgba(0,0,0,.14);opacity:1 !important;}
+.leaflet-tooltip.hist-leaflet-tip::before{border-top-color:white;}
+
+/* Legend */
+.map-legend{background:white;border:1px solid var(--border);border-radius:8px;padding:8px 10px;box-shadow:0 2px 8px rgba(0,0,0,.08);}
+.legend-row{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--text);padding:2px 0;}
+.legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-logo">社工個案<span>管理系統</span></div>
+  <div class="topbar-badge">⚠ 概念示範版 v4 · 虛構資料</div>
+  <div class="topbar-r">
+    <div class="topbar-stat">
+      <div class="ts-l">緊急個案</div>
+      <div class="ts-v" style="color:var(--red)" id="h-urgent">—</div>
+    </div>
+    <div class="topbar-stat">
+      <div class="ts-l">待訪視</div>
+      <div class="ts-v" style="color:var(--orange)" id="h-due">—</div>
+    </div>
+    <div class="topbar-stat">
+      <div class="ts-l">本月總案</div>
+      <div class="ts-v" id="h-total">—</div>
+    </div>
+    <div class="date-badge" id="today-date">—</div>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- LEFT PANEL -->
+  <div class="lp">
+    <div class="lp-head">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input class="search-input" id="search" placeholder="搜尋案號或類型..." oninput="filterList()">
+      </div>
+      <div class="filter-row" style="margin-bottom:8px">
+        <button class="fchip all act" onclick="setFilter('all',this)">全部</button>
+        <button class="fchip urgent" onclick="setFilter('urgent',this)">● 緊急</button>
+        <button class="fchip watch" onclick="setFilter('watch',this)">● 關注</button>
+        <button class="fchip stable" onclick="setFilter('stable',this)">● 穩定</button>
+      </div>
+      <button class="add-case-btn" onclick="openCaseForm()">＋ 新增個案</button>
+    </div>
+    <div class="case-list" id="case-list"></div>
+    <div class="route-bar">
+      <div class="route-count" id="route-count">尚未選取個案</div>
+      <button class="route-btn" id="route-btn" onclick="openGoogleMaps()" disabled>
+        🗺 在 Google Maps 規劃路線
+      </button>
+    </div>
+  </div>
+
+  <!-- MAP -->
+  <div id="map"></div>
+
+  <!-- RIGHT PANEL -->
+  <div class="rp">
+    <div class="rp-head">
+      <div class="rp-title">個案詳情</div>
+    </div>
+    <div class="rp-body">
+      <div class="empty-panel" id="ep">
+        <div class="empty-icon">📋</div>
+        <div class="empty-txt">點擊地圖標記或左側清單，查看個案詳情</div>
+      </div>
+      <div class="detail-card" id="dc">
+        <div class="detail-top-row">
+          <div>
+            <div class="detail-id" id="d-id">—</div>
+            <div class="detail-type" id="d-type">—</div>
+          </div>
+          <div class="detail-actions">
+            <button class="icon-btn" onclick="openCaseForm(activeCaseId)" title="編輯個案">✎</button>
+            <button class="icon-btn danger" onclick="deleteCase(activeCaseId)" title="刪除個案">🗑</button>
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <div class="detail-sec-title">基本資訊</div>
+          <div class="detail-field"><span class="df-label">風險等級</span><span class="df-value" id="d-risk">—</span></div>
+          <div class="detail-field"><span class="df-label">行政區</span><span class="df-value" id="d-area">—</span></div>
+          <div class="detail-field"><span class="df-label">負責社工</span><span class="df-value" id="d-worker">—</span></div>
+          <div class="detail-field"><span class="df-label">開案日期</span><span class="df-value" id="d-open">—</span></div>
+        </div>
+
+        <div class="detail-section">
+          <div class="detail-sec-title">訪視狀況</div>
+          <div class="detail-field"><span class="df-label">上次訪視</span><span class="df-value" id="d-last">—</span></div>
+          <div class="detail-field"><span class="df-label">建議頻率</span><span class="df-value" id="d-freq">—</span></div>
+          <div class="detail-field"><span class="df-label">逾期天數</span><span class="df-value" id="d-overdue">—</span></div>
+        </div>
+
+        <div class="detail-section">
+          <div class="detail-sec-title-row">
+            <div class="detail-sec-title">歷次個案紀錄</div>
+            <button class="add-visit-btn" onclick="openVisitForm(activeCaseId)">＋ 新增訪視紀錄</button>
+          </div>
+          <div class="timeline" id="d-timeline"></div>
+          <div class="tl-toggle" id="d-tl-toggle" onclick="toggleTimeline()" style="display:none">顯示完整紀錄 ▾</div>
+        </div>
+
+        <button class="action-btn btn-maps" id="d-maps-btn" onclick="openSingleMap()">
+          📍 在 Google Maps 查看位置
+        </button>
+        <button class="action-btn btn-visit" onclick="toggleRoute()">
+          <span id="d-route-txt">＋ 加入今日路線</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- RECORD DETAIL MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeRecordDetail()">
+  <div class="modal-card">
+
+    <div class="modal-top">
+      <div class="modal-head">
+        <div class="modal-head-l">
+          <div class="m-date" id="m-date">—</div>
+          <div class="m-sub" id="m-sub">—</div>
+        </div>
+        <div class="modal-head-r">
+          <button class="icon-btn" onclick="editCurrentRecord()" title="編輯此筆紀錄">✎</button>
+          <button class="icon-btn danger" onclick="deleteCurrentRecord()" title="刪除此筆紀錄">🗑</button>
+          <div class="modal-close" onclick="closeRecordDetail()">✕</div>
+        </div>
+      </div>
+      <div class="modal-tabs">
+        <button class="modal-tab" data-tab="basic" onclick="switchTab('basic')">基本資料</button>
+        <button class="modal-tab" data-tab="geno" onclick="switchTab('geno')">家系圖</button>
+        <button class="modal-tab" data-tab="visit" onclick="switchTab('visit')">訪視紀錄</button>
+        <button class="modal-tab" data-tab="dims" onclick="switchTab('dims')">四面項評估</button>
+        <button class="modal-tab" data-tab="plan" onclick="switchTab('plan')">處遇計畫</button>
+      </div>
+    </div>
+
+    <div class="modal-body">
+      <span class="m-risk-badge" id="m-risk-badge">—</span>
+
+      <!-- TAB: 基本資料 -->
+      <div class="tab-panel" data-panel="basic" id="panel-basic">
+        <div id="m-basic"></div>
+      </div>
+
+      <!-- TAB: 家系圖 -->
+      <div class="tab-panel" data-panel="geno" id="panel-geno">
+        <div id="m-genogram"></div>
+      </div>
+
+      <!-- TAB: 訪視紀錄 -->
+      <div class="tab-panel" data-panel="visit" id="panel-visit">
+        <div class="m-section">
+          <div class="m-sec-title">訪視資訊</div>
+          <div class="m-grid">
+            <div class="m-field"><div class="m-field-l">訪視方式</div><div class="m-field-v" id="m-method">—</div></div>
+            <div class="m-field"><div class="m-field-l">訪視時長</div><div class="m-field-v" id="m-duration">—</div></div>
+          </div>
+        </div>
+        <div class="so-block">
+          <div class="so-label"><span class="so-tag s">S</span>主觀陳述</div>
+          <div class="m-text-block" id="m-subjective">—</div>
+        </div>
+        <div class="so-block">
+          <div class="so-label"><span class="so-tag o">O</span>客觀觀察</div>
+          <div class="m-text-block" id="m-objective">—</div>
+        </div>
+        <div class="m-section" style="margin-bottom:0">
+          <div class="m-sec-title">本次提供服務</div>
+          <div class="m-services" id="m-services"></div>
+        </div>
+      </div>
+
+      <!-- TAB: 四面項評估 -->
+      <div class="tab-panel" data-panel="dims" id="panel-dims">
+        <div class="m-sec-title" style="margin-bottom:9px">生理‧心理‧社會‧經濟評估</div>
+        <div class="dim-grid">
+          <div class="dim-card"><div class="dim-card-label">生理 BIO</div><div class="dim-card-text" id="m-bio">—</div></div>
+          <div class="dim-card"><div class="dim-card-label">心理 PSYCHO</div><div class="dim-card-text" id="m-psycho">—</div></div>
+          <div class="dim-card"><div class="dim-card-label">社會 SOCIAL</div><div class="dim-card-text" id="m-social">—</div></div>
+          <div class="dim-card"><div class="dim-card-label">經濟 ECONOMIC</div><div class="dim-card-text" id="m-eco">—</div></div>
+        </div>
+        <div class="m-sec-title" style="margin:16px 0 9px">SWOT 綜合分析</div>
+        <div class="swot-grid">
+          <div class="swot-cell s"><div class="swot-label">S 優勢</div><div class="swot-text" id="m-swot-s">—</div></div>
+          <div class="swot-cell w"><div class="swot-label">W 劣勢</div><div class="swot-text" id="m-swot-w">—</div></div>
+          <div class="swot-cell o"><div class="swot-label">O 機會</div><div class="swot-text" id="m-swot-o">—</div></div>
+          <div class="swot-cell t"><div class="swot-label">T 威脅</div><div class="swot-text" id="m-swot-t">—</div></div>
+        </div>
+      </div>
+
+      <!-- TAB: 處遇計畫 -->
+      <div class="tab-panel" data-panel="plan" id="panel-plan">
+        <div class="m-sec-title" style="margin-bottom:9px">處遇計畫（依訪視進度調整）</div>
+        <div id="m-plan"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- CASE FORM MODAL（新增／編輯個案） -->
+<div class="modal-overlay" id="case-form-overlay" onclick="if(event.target===this)closeCaseForm()">
+  <div class="modal-card" style="width:480px">
+    <div class="modal-top">
+      <div class="modal-head">
+        <div class="modal-head-l">
+          <div class="m-date" id="cf-title">新增個案</div>
+          <div class="m-sub">填寫個案基本資訊（示範資料請勿輸入真實個資）</div>
+        </div>
+        <div class="modal-close" onclick="closeCaseForm()">✕</div>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="form-section-title">基本資訊</div>
+      <div class="form-row">
+        <div class="form-field"><label>案號 *</label><input id="cf-id" placeholder="例如 D-2501"></div>
+        <div class="form-field"><label>服務類型 *</label><input id="cf-type" placeholder="例如 獨居老人"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-field"><label>行政區</label><input id="cf-area" placeholder="例如 中正區"></div>
+        <div class="form-field"><label>負責社工</label><input id="cf-worker" placeholder="例如 林社工"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-field"><label>風險等級</label>
+          <select id="cf-risk"><option value="urgent">🔴 緊急</option><option value="watch">🟠 關注</option><option value="stable">🟢 穩定</option></select>
+        </div>
+        <div class="form-field"><label>建議訪視頻率（天）</label><input id="cf-freq" type="number" value="14"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-field"><label>性別</label>
+          <select id="cf-gender"><option value="女">女</option><option value="男">男</option></select>
+        </div>
+        <div class="form-field"><label>年齡</label><input id="cf-age" type="number"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-field"><label>同住狀況</label><input id="cf-household" placeholder="例如 獨居"></div>
+        <div class="form-field"><label>居住型態</label><input id="cf-living" placeholder="例如 自有公寓"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-field"><label>開案日期</label><input id="cf-open" type="date"></div>
+        <div class="form-field"><label>上次訪視日期</label><input id="cf-lastvisit" type="date"></div>
+      </div>
+      <div class="form-row full">
+        <div class="form-field"><label>開案緣由</label><textarea id="cf-reason" rows="2" placeholder="轉介來源與初始原因（去識別化描述）"></textarea></div>
+      </div>
+
+      <div class="form-section-title">地圖位置</div>
+      <div class="pick-loc-row form-row full" style="margin-bottom:6px">
+        <div class="form-field" style="flex:1"><label>緯度</label><input id="cf-lat" type="number" step="0.0001"></div>
+        <div class="form-field" style="flex:1"><label>經度</label><input id="cf-lon" type="number" step="0.0001"></div>
+        <button class="pick-loc-btn" id="cf-pick-btn" onclick="togglePickLocation()">📍 在地圖上點選</button>
+      </div>
+      <div style="font-size:10px;color:var(--muted);margin-bottom:4px" id="cf-pick-hint">點擊按鈕後，直接在地圖上點一下即可帶入座標（建議先套用地理模糊化再存正式資料）</div>
+
+      <div class="form-actions">
+        <button class="form-btn secondary" onclick="closeCaseForm()">取消</button>
+        <button class="form-btn primary" onclick="submitCaseForm()">儲存</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- VISIT FORM MODAL（新增／編輯訪視紀錄） -->
+<div class="modal-overlay" id="visit-form-overlay" onclick="if(event.target===this)closeVisitForm()">
+  <div class="modal-card" style="width:560px">
+    <div class="modal-top">
+      <div class="modal-head">
+        <div class="modal-head-l">
+          <div class="m-date" id="vf-title">新增訪視紀錄</div>
+          <div class="m-sub" id="vf-sub">—</div>
+        </div>
+        <div class="modal-close" onclick="closeVisitForm()">✕</div>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="form-section-title">訪視資訊</div>
+      <div class="form-row">
+        <div class="form-field"><label>訪視日期 *</label><input id="vf-date" type="date"></div>
+        <div class="form-field"><label>訪視社工</label><input id="vf-worker" placeholder="例如 林社工"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-field"><label>當次風險等級</label>
+          <select id="vf-risk"><option value="urgent">🔴 緊急</option><option value="watch">🟠 關注</option><option value="stable">🟢 穩定</option></select>
+        </div>
+        <div class="form-field"><label>訪視方式</label><input id="vf-method" placeholder="例如 居家訪視"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-field"><label>訪視時長（分鐘）</label><input id="vf-duration" type="number"></div>
+        <div class="form-field"><label>本次提供服務（用逗號分隔）</label><input id="vf-services" placeholder="居家服務轉介, 用藥安全確認"></div>
+      </div>
+      <div class="form-row full">
+        <div class="form-field"><label>訪視摘要（顯示於時間軸，50–100字）*</label><textarea id="vf-summary" rows="2"></textarea></div>
+      </div>
+
+      <div class="form-section-title">S / O 陳述</div>
+      <div class="form-row full"><div class="form-field"><label>主觀陳述（S）</label><textarea id="vf-subjective" rows="2"></textarea></div></div>
+      <div class="form-row full"><div class="form-field"><label>客觀觀察（O）</label><textarea id="vf-objective" rows="2"></textarea></div></div>
+
+      <div class="form-section-title">四面項評估</div>
+      <div class="form-row">
+        <div class="form-field"><label>生理 BIO</label><textarea id="vf-bio" rows="2"></textarea></div>
+        <div class="form-field"><label>心理 PSYCHO</label><textarea id="vf-psycho" rows="2"></textarea></div>
+      </div>
+      <div class="form-row">
+        <div class="form-field"><label>社會 SOCIAL</label><textarea id="vf-social" rows="2"></textarea></div>
+        <div class="form-field"><label>經濟 ECONOMIC</label><textarea id="vf-eco" rows="2"></textarea></div>
+      </div>
+
+      <div class="form-section-title">SWOT 綜合分析</div>
+      <div class="form-row">
+        <div class="form-field"><label>S 優勢</label><textarea id="vf-swot-s" rows="2"></textarea></div>
+        <div class="form-field"><label>W 劣勢</label><textarea id="vf-swot-w" rows="2"></textarea></div>
+      </div>
+      <div class="form-row">
+        <div class="form-field"><label>O 機會</label><textarea id="vf-swot-o" rows="2"></textarea></div>
+        <div class="form-field"><label>T 威脅</label><textarea id="vf-swot-t" rows="2"></textarea></div>
+      </div>
+
+      <div class="form-section-title">短中長期處遇計畫</div>
+      <div class="form-row full">
+        <div class="form-field">
+          <label>短期目標（1–2週）</label>
+          <div class="status-select-row">
+            <input id="vf-plan-short-text" placeholder="目標內容" style="flex:1">
+            <select id="vf-plan-short-status"><option>新增</option><option>持續</option><option>已調整</option><option>已達成</option></select>
+          </div>
+        </div>
+      </div>
+      <div class="form-row full">
+        <div class="form-field">
+          <label>中期目標（1–3個月）</label>
+          <div class="status-select-row">
+            <input id="vf-plan-mid-text" placeholder="目標內容" style="flex:1">
+            <select id="vf-plan-mid-status"><option>新增</option><option>持續</option><option>已調整</option><option>已達成</option></select>
+          </div>
+        </div>
+      </div>
+      <div class="form-row full">
+        <div class="form-field">
+          <label>長期目標（3個月以上）</label>
+          <div class="status-select-row">
+            <input id="vf-plan-long-text" placeholder="目標內容" style="flex:1">
+            <select id="vf-plan-long-status"><option>新增</option><option>持續</option><option>已調整</option><option>已達成</option></select>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button class="form-btn secondary" onclick="closeVisitForm()">取消</button>
+        <button class="form-btn primary" onclick="submitVisitForm()">儲存</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════
+// 虛構示範資料（非真實個人資料）
+// ═══════════════════════════════
+
+const SEED_CASES = [
+  {id:"A-2401",type:"獨居老人",lat:25.0501,lon:121.5346,area:"中正區",worker:"林社工",risk:"urgent",open:"2023-03-10",lastVisit:"2024-12-01",freqDays:14,
+    gender:"女",age:78,household:"獨居",living:"自有公寓，三樓無電梯",openReason:"里長轉介，發現長者獨居且子女探視頻率偏低，需評估居家安全與支持系統",
+    genogram:{
+      members:[
+        {id:"h1",name:"配偶(已故)",gender:"M",age:82,status:"deceased",x:0,y:0},
+        {id:"w1",name:"案主本人",gender:"F",age:78,isIndex:true,x:1,y:0,note:"獨居於本案地址"},
+        {id:"d1",name:"長女",gender:"F",age:50,x:0,y:1,note:"居住外縣市，聯繫不易"},
+        {id:"s1",name:"長子",gender:"M",age:47,x:1,y:1,note:"偶有聯繫"},
+      ],
+      unions:[{a:"h1",b:"w1",type:"married",children:["d1","s1"]}],
+    },
+    history:[
+      {date:"2024-12-01",worker:"林社工",risk:"urgent",summary:"行動能力下降，冰箱存糧不足。子女聯繫困難。需優先安排居家服務評估。",
+        detail:{
+          subjective:"案主首次主動表示「最近真的有點吃不消，東西買不夠吃」，對居服員到宅服務態度轉為開放。",
+          objective:"冰箱內食材明顯不足，行動能力較前次再度下降，需扶持家具才能緩慢移動，嘗試聯繫子女但多次未獲回應。",
+          bio:"下肢無力情形加劇，獨立行走有困難，跌倒風險高，尚未完成長照評估。",
+          psycho:"出現焦慮情緒，對獨自生活的安全感降低，首次主動表達需要協助。",
+          social:"子女聯繫困難，鄰居協助已達能力上限，案主支持系統明顯出現缺口。",
+          eco:"經濟狀況未變，但生活自理成本可能因需聘僱協助而上升。",
+          swot:{s:"案主態度轉趨開放，願意接受協助",w:"行動與營養狀況雙重惡化，安全風險高",o:"案主意願改變，為啟動居家服務之關鍵時機",t:"若延誤介入，可能發生跌倒或營養不良等緊急事件"},
+          plan:{short:{text:"優先安排居家服務評估，確認近期飲食與安全狀況",status:"已調整"},
+                mid:{text:"加速長照需求評估及資源連結，降低跌倒及營養風險",status:"已調整"},
+                long:{text:"建立穩定居家照顧支持，並嘗試重新搭建與子女之聯繫",status:"已調整"}},
+          method:"緊急訪視",duration:78,services:["居家服務轉介","送餐服務確認","緊急聯絡人核實","用藥安全確認"],
+        }},
+      {date:"2024-11-10",worker:"林社工",risk:"watch",summary:"行動能力尚可自理，下肢無力情形較前次明顯。已提醒留意跌倒風險。",
+        detail:{
+          subjective:"案主表示膝蓋狀況「時好時壞」，仍未就醫，認為「年紀大了本來就會這樣」。",
+          objective:"觀察案主起身及行走動作較為遲緩，下肢無力情形較前次訪視明顯，居家環境仍維持整潔。",
+          bio:"下肢肌力較前次觀察明顯下降，跌倒風險上升，尚未規律就醫追蹤。",
+          psycho:"情緒尚屬穩定，但對自身行動能力下降略顯擔憂。",
+          social:"鄰居協助機制持續，惟需留意鄰居本身亦為高齡者，協助能力有限。",
+          eco:"經濟狀況無明顯變化。",
+          swot:{s:"案主對自身狀況具一定覺察力",w:"跌倒風險上升，醫療介入仍未啟動",o:"可優先連結居家醫療或長照評估資源",t:"跌倒風險若未控制，可能導致緊急住院或失能加劇"},
+          plan:{short:{text:"提醒留意跌倒風險，協助聯繫長照管理中心評估",status:"已調整"},
+                mid:{text:"觀察鄰居協助機制穩定性，作為居服轉介前之過渡支持",status:"持續"},
+                long:{text:"建立穩定社區支持網絡，降低未來照顧風險",status:"持續"}},
+          method:"居家訪視",duration:42,services:["居家服務轉介","安全警報器檢查"],
+        }},
+      {date:"2024-10-15",worker:"林社工",risk:"watch",summary:"居家環境整潔，三餐由鄰居協助代買。情緒穩定，無明顯異狀。",
+        detail:{
+          subjective:"案主表示「最近天氣冷，膝蓋比較不舒服，但還是可以自己走」，仍婉拒居服員到宅服務。",
+          objective:"居家環境整潔，三餐由鄰居協助代買，行走步態略顯遲緩但無需扶持，情緒穩定。",
+          bio:"主訴膝關節不適頻率增加，未就醫評估，行動能力較前次略降但仍可自理基本生活。",
+          psycho:"情緒穩定，對鄰居協助表達感謝，未見明顯心理困擾。",
+          social:"鄰居代買三餐機制運作良好，為重要支持資源；與子女僅電話聯繫，頻率偏低。",
+          eco:"經濟狀況持平，無新增支出壓力。",
+          swot:{s:"鄰里支持網絡穩固運作",w:"行動能力呈下降趨勢，尚未尋求醫療評估",o:"可評估轄區醫療資源轉介，及早處理關節問題",t:"若未及時就醫，行動能力可能持續惡化"},
+          plan:{short:{text:"關心案主膝關節狀況，鼓勵就醫評估",status:"已調整"},
+                mid:{text:"觀察鄰居協助機制穩定性，作為居服轉介前之過渡支持",status:"持續"},
+                long:{text:"建立穩定社區支持網絡，降低未來照顧風險",status:"持續"}},
+          method:"居家訪視",duration:38,services:["送餐服務確認","用藥安全確認"],
+        }},
+      {date:"2024-09-02",worker:"陳社工",risk:"stable",summary:"首次接案訪視。獨居多年，與里長熟識，社區支持網絡尚可。",
+        detail:{
+          subjective:"案主表示「自己住習慣了，子女工作忙，不想麻煩他們」，對居家服務有抗拒感，認為目前還能自理。",
+          objective:"居住環境整潔，行動尚可自主上下樓，未見明顯外傷或營養不良徵象。里長表示案主平日會參與社區活動，人際互動良好。",
+          bio:"自述偶有膝關節痠痛，行動尚可獨立完成日常生活活動，未規律服用慢性病藥物。",
+          psycho:"情緒平穩，言談中流露對獨居生活的自主感，未見明顯憂鬱或焦慮徵象。",
+          social:"與里長及鄰居熟識，社區人際網絡為主要支持來源；子女因工作關係較少返家。",
+          eco:"領有老人生活津貼，經濟狀況尚可維持基本開銷，無急迫性經濟困難。",
+          swot:{s:"自理能力尚可，具社區人際支持",w:"子女支持系統薄弱，未來照顧人力存在缺口",o:"可進一步連結社區照顧據點或居服資源",t:"隨年齡增長，自理能力可能逐漸下降"},
+          plan:{short:{text:"建立關係，了解案主真實需求與意願",status:"新增"},
+                mid:{text:"評估居家服務轉介可能性，尊重案主自主意願循序溝通",status:"新增"},
+                long:{text:"建立穩定社區支持網絡，降低未來照顧風險",status:"新增"}},
+          method:"居家訪視",duration:50,services:["緊急聯絡人核實"],
+        }},
+    ]},
+
+  {id:"A-2408",type:"兒童保護",lat:25.0420,lon:121.5130,area:"萬華區",worker:"陳社工",risk:"urgent",open:"2024-01-15",lastVisit:"2025-01-10",freqDays:7,
+    gender:"女",age:8,household:"與父親同住",living:"租賃公寓",openReason:"校方依兒少保護通報系統通報，疑似照顧疏忽情形",
+    genogram:{
+      members:[
+        {id:"gm1",name:"祖母(父方)",gender:"F",age:68,x:1,y:0,note:"探視時偶有陪同"},
+        {id:"f1",name:"父親",gender:"M",age:35,x:0,y:1},
+        {id:"m1",name:"母親",gender:"F",age:33,x:1,y:1,note:"未與案童同住"},
+        {id:"p1",name:"母親同居人",gender:"M",age:38,x:2,y:1,note:"近一年同住於母親處"},
+        {id:"c1",name:"案童",gender:"F",age:8,isIndex:true,x:0,y:2,note:"本案保護對象，與父親同住"},
+      ],
+      unions:[
+        {a:"gm1",b:null,children:["f1"]},
+        {a:"f1",b:"m1",type:"divorced",children:["c1"]},
+        {a:"m1",b:"p1",type:"partner"},
+      ],
+    },
+    history:[
+      {date:"2025-01-10",worker:"陳社工",risk:"urgent",summary:"學校通報出現瘀傷，家長說明前後不一致。已通報警政，待後續處理。",
+        detail:{
+          subjective:"兒童對瘀傷成因之說明前後不一致，父親則表示「自己不小心跌倒的」，雙方說法有出入。",
+          objective:"兒童身上發現瘀傷，位置與描述之跌倒情形不完全相符，已依法通報警政單位，待進一步調查。",
+          bio:"身體檢視發現瘀傷，已建議轉介醫療進行詳細評估及驗傷。",
+          psycho:"兒童於訪談中情緒略顯緊張，對相關問題之回應簡短且閉避。",
+          social:"家庭照顧穩定性再度受到質疑，跨單位（警政、教育）協調介入中。",
+          eco:"經濟狀況未變，非本次重點議題。",
+          swot:{s:"學校敏感度高，及時通報爭取介入時機",w:"親子雙方說法不一致，照顧安全性存疑",o:"已啟動跨單位協調機制，可整合多方資源共同評估",t:"若調查證實照顧疏忽或不當對待，兒童人身安全風險升高"},
+          plan:{short:{text:"配合警政調查，安排醫療驗傷及安全評估",status:"已調整"},
+                mid:{text:"視調查結果評估是否需啟動安置或加強監督機制",status:"已調整"},
+                long:{text:"重新評估家庭照顧能力，建構符合兒童最佳利益之長期支持計畫",status:"已調整"}},
+          method:"緊急訪視",duration:65,services:["安全評估","跨單位通報協調","身體狀況檢視","學校聯繫紀錄"],
+        }},
+      {date:"2025-01-03",worker:"陳社工",risk:"watch",summary:"例行訪視，兒童在家狀況正常，家長表示近期工作壓力大。",
+        detail:{
+          subjective:"父親表示「最近案子比較多，比較累」，兒童則表示「在家裡都自己看電視」。",
+          objective:"例行訪視觀察兒童狀況正常，互動自然，惟父親提及近期工作負荷增加，照顧時間可能受擠壓。",
+          bio:"無新增生理議題。",
+          psycho:"兒童情緒穩定，惟提及較常獨自在家，需留意陪伴時間是否足夠。",
+          social:"父親工作壓力上升，可能影響照顧品質；祖母探視頻率持平。",
+          eco:"經濟狀況未變。",
+          swot:{s:"親職教育課程成效持續，家長技巧提升",w:"工作壓力上升，照顧時間可能再度受限",o:"可評估課後照顧或社區資源銜接，分擔照顧負荷",t:"若工作壓力未緩解，照顧疏忽風險可能再度浮現"},
+          plan:{short:{text:"關心父親工作負荷狀況，評估課後照顧資源需求",status:"持續"},
+                mid:{text:"評估親職教育課程轉介可能性，協助父親提升照顧能力",status:"持續"},
+                long:{text:"建構家庭支持網絡，確保兒童穩定成長環境",status:"持續"}},
+          method:"居家訪視",duration:35,services:["親職教育轉介","學校聯繫紀錄"],
+        }},
+      {date:"2024-12-20",worker:"陳社工",risk:"watch",summary:"親職教育課程出席率良好，家長配合度提升。",
+        detail:{
+          subjective:"父親表示「上完課之後比較知道怎麼跟孩子相處」，對親職教育課程評價正向。",
+          objective:"觀察父女互動較前次自然，兒童在學校出席狀況正常，衣著整潔度提升。",
+          bio:"生長發育持續觀察中，未有新增醫療議題。",
+          psycho:"兒童與社工互動較前次放鬆，主動分享學校生活，情緒表現穩定。",
+          social:"父親開始主動參與親職教育課程，課程出席率良好；祖母仍維持探視頻率。",
+          eco:"經濟狀況未變。",
+          swot:{s:"父親配合度明顯提升，主動學習照顧技巧",w:"仍為單親照顧，長期人力支持仍待補強",o:"親職教育課程成效初現，可持續強化",t:"若工作壓力增加，照顧品質仍可能受影響"},
+          plan:{short:{text:"持續鼓勵父親完成親職教育課程",status:"持續"},
+                mid:{text:"評估親職教育課程轉介可能性，協助父親提升照顧能力",status:"持續"},
+                long:{text:"建構家庭支持網絡，確保兒童穩定成長環境",status:"持續"}},
+          method:"陪同訪視",duration:40,services:["親職教育轉介","身體狀況檢視"],
+        }},
+      {date:"2024-11-28",worker:"王社工",risk:"watch",summary:"接獲學校初次通報疑似疏忽，啟動關懷訪視。",
+        detail:{
+          subjective:"父親表示「最近工作比較忙，可能照顧上有疏忽，但不是故意的」，對學校通報感到不滿。",
+          objective:"兒童身高體重略低於同齡標準，衣物整潔尚可，與社工互動略顯退縮，未見明顯外傷。",
+          bio:"生長發育指標略低於平均，無立即醫療風險，建議持續觀察。",
+          psycho:"兒童情緒表現平穩，與社工互動需時間建立信任，未見明顯異常行為。",
+          social:"家庭僅父親與兒童同住，缺乏其他成年照顧者協助；祖母偶爾探視提供支持。",
+          eco:"家庭經濟來源單一（父親工作收入），無其他補助。",
+          swot:{s:"父親對通報事件有所回應，未完全拒絕介入",w:"單親照顧資源有限，缺乏替補照顧人力",o:"祖母願意提供部分支持，可作為資源銜接對象",t:"若照顧疏忽持續未改善，兒童發展可能受影響"},
+          plan:{short:{text:"建立信任關係，釐清家庭照顧分工現況",status:"新增"},
+                mid:{text:"評估親職教育課程轉介可能性，協助父親提升照顧能力",status:"新增"},
+                long:{text:"建構家庭支持網絡，確保兒童穩定成長環境",status:"新增"}},
+          method:"居家訪視",duration:48,services:["安全評估","學校聯繫紀錄"],
+        }},
+    ]},
+
+  {id:"A-2415",type:"身心障礙",lat:25.0631,lon:121.5289,area:"中山區",worker:"林社工",risk:"urgent",open:"2022-08-20",lastVisit:"2024-12-20",freqDays:21,
+    gender:"男",age:45,household:"與年邁雙親同住",living:"自有公寓",openReason:"日照中心轉介，因家屬照顧負荷過重",
+    genogram:{
+      members:[
+        {id:"f1",name:"父親",gender:"M",age:74,x:0,y:0},
+        {id:"m1",name:"母親",gender:"F",age:71,x:1,y:0,note:"主要照顧者，近期照顧負荷過重"},
+        {id:"w1",name:"案主本人",gender:"M",age:45,isIndex:true,x:0,y:1},
+        {id:"b1",name:"弟弟",gender:"M",age:41,x:1,y:1,note:"已成家，較少協助照顧"},
+      ],
+      unions:[{a:"f1",b:"m1",type:"married",children:["w1","b1"]}],
+    },
+    history:[
+      {date:"2024-12-20",worker:"林社工",risk:"urgent",summary:"日照中心已停辦，家屬喘息服務需求急切。照顧者有情緒崩潰跡象。"},
+      {date:"2024-11-29",worker:"林社工",risk:"watch",summary:"日照中心服務正常，家屬照顧負荷中等，已提供資源轉介資訊。"},
+      {date:"2024-11-08",worker:"林社工",risk:"watch",summary:"個案復健進度穩定，家屬表示日照中心服務滿意。"},
+    ]},
+
+  {id:"B-2302",type:"家庭暴力",lat:25.0336,lon:121.5636,area:"信義區",worker:"王社工",risk:"watch",open:"2023-07-05",lastVisit:"2025-01-05",freqDays:14,
+    gender:"女",age:34,household:"與兩名子女同住",living:"租賃套房（庇護後租屋）",openReason:"醫院社工轉介，遭受親密關係暴力",
+    genogram:{
+      members:[
+        {id:"mo1",name:"案主之母",gender:"F",age:60,x:0,y:0,note:"提供照顧支持，居住鄰近"},
+        {id:"w1",name:"案主本人",gender:"F",age:34,isIndex:true,x:1,y:1},
+        {id:"h1",name:"前配偶(已搬離)",gender:"M",age:36,x:2,y:1,note:"保護令生效中"},
+        {id:"c1",name:"長子",gender:"M",age:9,x:0,y:2},
+        {id:"c2",name:"次女",gender:"F",age:6,x:1,y:2},
+      ],
+      unions:[
+        {a:"mo1",b:null,children:["w1"]},
+        {a:"w1",b:"h1",type:"separated",children:["c1","c2"]},
+      ],
+    },
+    history:[
+      {date:"2025-01-05",worker:"王社工",risk:"watch",summary:"保護令有效中，施暴者已搬出。個案情緒漸穩定，持續提供諮商轉介。",
+        detail:{
+          subjective:"案主表示情緒「比較穩定了，雖然偶爾還是會想到那段時間」，並提及希望能找工作恢復經濟自主。",
+          objective:"案主整體情緒及生活作息趨於穩定，主動提及未來規劃，顯示復原進展正向。",
+          bio:"身體傷勢已基本復原，無新增醫療議題。",
+          psycho:"情緒持續穩定，創傷反應頻率降低，諮商轉介已開始進行。",
+          social:"母親持續提供支持，案主社會功能逐漸恢復；配偶依保護令未再接觸。",
+          eco:"案主表達就業意願，經濟自立議題成為下階段重點。",
+          swot:{s:"情緒穩定度持續提升，具復原動力與就業意願",w:"經濟自立尚未達成，仍依賴母親支持",o:"可連結就業服務資源，協助案主重建經濟自主",t:"保護令到期後之長期人身安全規劃仍需持續關注"},
+          plan:{short:{text:"持續諮商轉介，並開始評估就業服務資源連結",status:"持續"},
+                mid:{text:"確認心理諮商轉介銜接情形，觀察情緒復原進度",status:"持續"},
+                long:{text:"協助建立經濟自立能力，降低未來重返暴力關係之風險",status:"持續"}},
+          method:"居家訪視",duration:45,services:["保護令進度確認","心理諮商轉介"],
+        }},
+      {date:"2024-12-22",worker:"王社工",risk:"watch",summary:"保護令申請通過，個案表示較有安全感，但仍有焦慮情形。",
+        detail:{
+          subjective:"案主表示「保護令下來之後，比較不會一直緊張地注意他會不會回來」，但偶有失眠及回想起衝突畫面的情形。",
+          objective:"案主情緒較前次平穩，言談中焦慮感降低，惟仍可觀察到對突發聲響較為敏感。",
+          bio:"驗傷紀錄已完成留存，身體傷勢逐漸復原中。",
+          psycho:"焦慮程度較前次下降，但仍有創傷後反應徵象，建議轉介心理諮商持續處理。",
+          social:"配偶已依保護令規定搬離，母親協助提供生活上的支持；案主開始重新建立日常作息。",
+          eco:"暫由母親協助部分生活開銷，尚未恢復獨立經濟能力。",
+          swot:{s:"保護令生效，立即安全威脅已降低",w:"創傷反應仍存在，心理復原需要時間",o:"已轉介心理諮商資源，可持續強化情緒支持",t:"配偶仍可能透過其他方式接觸或施壓，需持續留意"},
+          plan:{short:{text:"陪同驗傷取證，連結法律扶助及心理支持資源",status:"持續"},
+                mid:{text:"確認心理諮商轉介銜接情形，觀察情緒復原進度",status:"已調整"},
+                long:{text:"協助建立經濟自立能力，降低未來重返暴力關係之風險",status:"持續"}},
+          method:"居家訪視",duration:50,services:["保護令進度確認","安全計畫檢視","心理諮商轉介"],
+        }},
+      {date:"2024-12-08",worker:"王社工",risk:"urgent",summary:"遭受肢體暴力後首次訪視，協助申請緊急庇護及保護令。",
+        detail:{
+          subjective:"案主表示遭配偶肢體暴力已非首次，但這次「真的覺得很害怕，不知道還能撐多久」，首次主動求助。",
+          objective:"案主身上可見新舊傷痕，情緒激動，言談中多次提及恐懼與不安，居家環境顯示近期有爭執痕跡。",
+          bio:"身體檢視可見多處傷痕，建議盡速就醫驗傷並保留證據。",
+          psycho:"情緒高度焦慮，伴隨創傷反應徵象（驚跳反應、過度警覺），急需情緒支持與安全感建立。",
+          social:"配偶仍同住，案主缺乏立即可用之安全居所；母親居住鄰近，表達支持但擔心介入後衝突升級。",
+          eco:"經濟與配偶共同生活，缺乏獨立經濟來源，為後續安全計畫之考量因素。",
+          swot:{s:"案主已主動求助，求助意願強烈",w:"缺乏獨立經濟能力與安全居所",o:"具保護令及緊急庇護資源可立即啟動",t:"返家後可能再度遭受暴力，人身安全風險極高"},
+          plan:{short:{text:"協助申請緊急保護令及庇護安置，確保立即人身安全",status:"新增"},
+                mid:{text:"陪同驗傷取證，連結法律扶助及心理支持資源",status:"新增"},
+                long:{text:"協助建立經濟自立能力，降低未來重返暴力關係之風險",status:"新增"}},
+          method:"緊急訪視",duration:85,services:["保護令進度確認","庇護資源說明","心理諮商轉介","加害人動向了解"],
+        }},
+    ]},
+
+  {id:"B-2309",type:"精神健康",lat:25.0484,lon:121.5143,area:"大同區",worker:"陳社工",risk:"watch",open:"2024-02-28",lastVisit:"2025-01-08",freqDays:14,
+    gender:"男",age:52,household:"獨居",living:"社會住宅",openReason:"衛生所社區關懷訪視員轉介，疑似服藥不規律",
+    genogram:{
+      members:[
+        {id:"f1",name:"父親(已故)",gender:"M",status:"deceased",x:0,y:0},
+        {id:"m1",name:"母親(已故)",gender:"F",status:"deceased",x:1,y:0},
+        {id:"w1",name:"案主本人",gender:"M",age:52,isIndex:true,x:0,y:1,note:"獨居於社會住宅"},
+        {id:"s1",name:"妹妹",gender:"F",age:48,x:1,y:1,note:"居住外縣市，聯繫頻率低"},
+      ],
+      unions:[{a:"f1",b:"m1",type:"married",children:["w1","s1"]}],
+    },
+    history:[
+      {date:"2025-01-08",worker:"陳社工",risk:"watch",summary:"藥物配合度改善，但偶有停藥情形。與精神科協作追蹤中。鄰居反映有噪音糾紛。"},
+      {date:"2024-12-25",worker:"陳社工",risk:"watch",summary:"規律服藥，情緒平穩。社區關懷訪視員回報互動良好。"},
+      {date:"2024-12-11",worker:"陳社工",risk:"urgent",summary:"自行停藥約一週，出現睡眠紊亂與情緒不穩，已協助回診調整。"},
+    ]},
+
+  {id:"B-2317",type:"低收入戶",lat:25.0259,lon:121.5436,area:"大安區",worker:"王社工",risk:"watch",open:"2023-10-12",lastVisit:"2025-01-03",freqDays:30,
+    gender:"女",age:41,household:"與兩名子女同住",living:"租賃公寓",openReason:"里幹事轉介，家庭經濟陷入困境",
+    genogram:{
+      members:[
+        {id:"w1",name:"案主本人",gender:"F",age:41,isIndex:true,x:0,y:0},
+        {id:"h1",name:"前配偶(已離婚)",gender:"M",age:43,x:1,y:0,note:"未提供經濟支持"},
+        {id:"c1",name:"長子",gender:"M",age:13,x:0,y:1},
+        {id:"c2",name:"次子",gender:"M",age:10,x:1,y:1},
+      ],
+      unions:[{a:"w1",b:"h1",type:"divorced",children:["c1","c2"]}],
+    },
+    history:[
+      {date:"2025-01-03",worker:"王社工",risk:"watch",summary:"申請急難救助中，預計本月審核完成。子女就學費用協助已轉介教育局。"},
+      {date:"2024-12-04",worker:"王社工",risk:"watch",summary:"家庭收入不穩定，協助申請急難救助及就學補助。"},
+      {date:"2024-11-05",worker:"王社工",risk:"stable",summary:"定期關懷訪視，家庭狀況持平，子女就學正常。"},
+    ]},
+
+  {id:"B-2324",type:"獨居老人",lat:25.0572,lon:121.5521,area:"松山區",worker:"林社工",risk:"watch",open:"2022-05-18",lastVisit:"2024-12-28",freqDays:21,
+    gender:"男",age:81,household:"獨居",living:"自有老舊公寓",openReason:"鄰居通報，疑似輕度認知功能退化",
+    genogram:{
+      members:[
+        {id:"w1",name:"配偶(已故)",gender:"F",status:"deceased",x:0,y:0},
+        {id:"m1",name:"案主本人",gender:"M",age:81,isIndex:true,x:1,y:0},
+        {id:"d1",name:"女兒",gender:"F",age:52,x:0,y:1,note:"居住外縣市，較少探視"},
+        {id:"s1",name:"兒子",gender:"M",age:49,x:1,y:1,note:"工作繁忙，聯繫不易"},
+      ],
+      unions:[{a:"w1",b:"m1",type:"married",children:["d1","s1"]}],
+    },
+    history:[
+      {date:"2024-12-28",worker:"林社工",risk:"watch",summary:"輕微認知退化，已申請失智社區服務據點。家屬參與度低，需持續溝通。"},
+      {date:"2024-12-07",worker:"林社工",risk:"watch",summary:"記憶力測驗結果較前次略降，建議轉介記憶門診評估。"},
+      {date:"2024-11-16",worker:"林社工",risk:"stable",summary:"日常生活功能尚可，社區活動參與度高，情緒穩定。"},
+    ]},
+
+  {id:"B-2331",type:"未成年家長",lat:25.0361,lon:121.5049,area:"中和區",worker:"陳社工",risk:"watch",open:"2024-06-01",lastVisit:"2025-01-12",freqDays:14,
+    gender:"女",age:17,household:"與母親同住",living:"母親租賃住所",openReason:"醫院社工轉介，未成年產婦個案",
+    genogram:{
+      members:[
+        {id:"mo1",name:"案主之母",gender:"F",age:45,x:0,y:0,note:"提供居住及育兒支持"},
+        {id:"w1",name:"案主本人",gender:"F",age:17,isIndex:true,x:1,y:0},
+        {id:"bf1",name:"嬰兒之父",gender:"M",age:19,x:2,y:0,note:"未與案主同住，偶爾探視"},
+        {id:"baby1",name:"嬰兒",gender:"F",x:1,y:1,note:"6個月大"},
+      ],
+      unions:[
+        {a:"mo1",b:null,children:["w1"]},
+        {a:"w1",b:"bf1",type:"partner",children:["baby1"]},
+      ],
+    },
+    history:[
+      {date:"2025-01-12",worker:"陳社工",risk:"watch",summary:"17 歲單親，育有 6 個月嬰兒。育兒技巧尚可，經濟壓力大。已轉介托育補助。"},
+      {date:"2024-12-29",worker:"陳社工",risk:"watch",summary:"嬰兒健檢正常，個案育兒信心提升，持續參與親職教育團體。"},
+      {date:"2024-12-15",worker:"陳社工",risk:"urgent",summary:"產後情緒低落明顯，轉介心理諮商及育兒指導資源。"},
+    ]},
+
+  {id:"C-2205",type:"更生人",lat:25.0469,lon:121.5158,area:"萬華區",worker:"王社工",risk:"stable",open:"2022-11-08",lastVisit:"2025-01-09",freqDays:30,
+    gender:"男",age:38,household:"獨居",living:"租賃套房",openReason:"更生保護會轉介，假釋出獄追蹤",
+    genogram:{
+      members:[
+        {id:"f1",name:"父親",gender:"M",age:65,x:0,y:0,note:"關係疏遠"},
+        {id:"m1",name:"母親",gender:"F",age:63,x:1,y:0},
+        {id:"w1",name:"案主本人",gender:"M",age:38,isIndex:true,x:0,y:1,note:"獨居，與原生家庭關係緊張"},
+      ],
+      unions:[{a:"f1",b:"m1",type:"married",children:["w1"]}],
+    },
+    history:[
+      {date:"2025-01-09",worker:"王社工",risk:"stable",summary:"穩定就業 8 個月，工作表現良好。定期回診中。自述心理狀態良好，無再犯念頭。"},
+      {date:"2024-12-10",worker:"王社工",risk:"stable",summary:"工作表現受雇主肯定，準備考取相關證照提升職能。"},
+      {date:"2024-11-11",worker:"王社工",risk:"stable",summary:"就業穩定滿半年，定期回診配合度良好。"},
+    ]},
+
+  {id:"C-2218",type:"新住民",lat:25.0607,lon:121.5401,area:"中山區",worker:"林社工",risk:"stable",open:"2023-04-22",lastVisit:"2024-12-15",freqDays:60,
+    gender:"女",age:29,household:"與配偶同住",living:"配偶自有住宅",openReason:"移民署轉介，新住民生活適應關懷",
+    genogram:{
+      members:[
+        {id:"h1",name:"配偶",gender:"M",age:35,x:0,y:0},
+        {id:"w1",name:"案主本人",gender:"F",age:29,isIndex:true,x:1,y:0,note:"原生家庭在海外"},
+      ],
+      unions:[{a:"h1",b:"w1",type:"married"}],
+    },
+    history:[
+      {date:"2024-12-15",worker:"林社工",risk:"stable",summary:"中文學習進步，已取得工作許可。家庭關係穩定，適應良好。案況良好，評估降頻。"},
+      {date:"2024-10-20",worker:"林社工",risk:"stable",summary:"完成中文課程結業，積極尋找工作機會。家庭支持系統穩固。"},
+    ]},
+
+  {id:"C-2226",type:"身心障礙",lat:25.0293,lon:121.5558,area:"信義區",worker:"陳社工",risk:"stable",open:"2021-09-30",lastVisit:"2024-12-22",freqDays:60,
+    gender:"男",age:23,household:"與雙親同住",living:"自有公寓",openReason:"特教學校轉介，畢業後福利銜接",
+    genogram:{
+      members:[
+        {id:"f1",name:"父親",gender:"M",age:58,x:0,y:0},
+        {id:"m1",name:"母親",gender:"F",age:55,x:1,y:0,note:"主要照顧者"},
+        {id:"w1",name:"案主本人",gender:"M",age:23,isIndex:true,x:0,y:1},
+      ],
+      unions:[{a:"f1",b:"m1",type:"married",children:["w1"]}],
+    },
+    history:[
+      {date:"2024-12-22",worker:"陳社工",risk:"stable",summary:"日照中心服務穩定，家屬照顧技巧佳。輔具申請已核准，等待配發。"},
+      {date:"2024-10-25",worker:"陳社工",risk:"stable",summary:"定期追蹤訪視，個案狀況穩定，無新增需求。"},
+    ]},
+
+  {id:"C-2234",type:"獨居老人",lat:25.0545,lon:121.5251,area:"大同區",worker:"王社工",risk:"stable",open:"2022-02-14",lastVisit:"2025-01-06",freqDays:30,
+    gender:"女",age:75,household:"獨居",living:"自有公寓",openReason:"定期關懷對象，社區篩檢轉介",
+    genogram:{
+      members:[
+        {id:"h1",name:"配偶(已故)",gender:"M",status:"deceased",x:0,y:0},
+        {id:"w1",name:"案主本人",gender:"F",age:75,isIndex:true,x:1,y:0,note:"獨居，社區互動良好"},
+        {id:"d1",name:"女兒",gender:"F",age:48,x:0,y:1,note:"固定每週探視"},
+      ],
+      unions:[{a:"h1",b:"w1",type:"married",children:["d1"]}],
+    },
+    history:[
+      {date:"2025-01-06",worker:"王社工",risk:"stable",summary:"自理能力完好，社交活動活躍。鄰里關係良好，有自然支持網絡。定期電訪即可。"},
+      {date:"2024-12-07",worker:"王社工",risk:"stable",summary:"參與社區活動頻繁，身心狀況良好，無特殊需求。"},
+    ]},
+
+  {id:"A-2422",type:"藥物濫用",lat:25.0411,lon:121.5470,area:"大安區",worker:"陳社工",risk:"urgent",open:"2024-09-03",lastVisit:"2025-01-02",freqDays:7,
+    gender:"男",age:29,household:"與家人同住",living:"家人自有住宅",openReason:"毒防中心轉介，社區追蹤輔導",
+    genogram:{
+      members:[
+        {id:"f1",name:"父親",gender:"M",age:56,x:0,y:0},
+        {id:"m1",name:"母親",gender:"F",age:54,x:1,y:0,note:"近期多次向社工求助"},
+        {id:"w1",name:"案主本人",gender:"M",age:29,isIndex:true,x:0,y:1},
+      ],
+      unions:[{a:"f1",b:"m1",type:"married",children:["w1"]}],
+    },
+    history:[
+      {date:"2025-01-02",worker:"陳社工",risk:"urgent",summary:"近期多次無預警失聯，疑再次使用藥物。家人求助，需立即確認安全。"},
+      {date:"2024-12-19",worker:"陳社工",risk:"watch",summary:"戒治療程配合度尚可，但出現情緒不穩及失眠情形。"},
+      {date:"2024-12-05",worker:"陳社工",risk:"stable",summary:"戒治三個月成效良好，尿液篩檢結果正常，持續門診追蹤。"},
+    ]},
+
+  {id:"B-2338",type:"青少年輔導",lat:25.0518,lon:121.5612,area:"松山區",worker:"林社工",risk:"watch",open:"2024-03-15",lastVisit:"2025-01-11",freqDays:14,
+    gender:"男",age:15,household:"與父母同住",living:"自有公寓",openReason:"學校輔導室轉介，中輟風險個案",
+    genogram:{
+      members:[
+        {id:"f1",name:"父親",gender:"M",age:44,x:0,y:0},
+        {id:"m1",name:"母親",gender:"F",age:41,x:1,y:0,note:"表示管教上有困難"},
+        {id:"w1",name:"案主本人",gender:"M",age:15,isIndex:true,x:0,y:1},
+      ],
+      unions:[{a:"f1",b:"m1",type:"married",children:["w1"]}],
+    },
+    history:[
+      {date:"2025-01-11",worker:"林社工",risk:"watch",summary:"中輟問題改善，已復學。同儕影響仍需關注。與學校輔導室保持聯繫。"},
+      {date:"2024-12-21",worker:"林社工",risk:"urgent",summary:"連續缺課一週，疑似與校外人士往來頻繁，緊急家訪了解狀況。"},
+      {date:"2024-11-30",worker:"林社工",risk:"watch",summary:"出席狀況不穩定，家長表示管教上有困難，已轉介親職諮詢。"},
+    ]},
+
+  {id:"C-2241",type:"家庭支持",lat:25.0383,lon:121.5195,area:"萬華區",worker:"王社工",risk:"stable",open:"2023-01-20",lastVisit:"2024-12-10",freqDays:45,
+    gender:"女",age:36,household:"與配偶及兩名子女同住",living:"自有公寓",openReason:"社福中心定期關懷，家庭功能重建",
+    genogram:{
+      members:[
+        {id:"h1",name:"配偶",gender:"M",age:38,x:0,y:0},
+        {id:"w1",name:"案主本人",gender:"F",age:36,isIndex:true,x:1,y:0},
+        {id:"c1",name:"長女",gender:"F",age:10,x:0,y:1},
+        {id:"c2",name:"次女",gender:"F",age:7,x:1,y:1},
+      ],
+      unions:[{a:"h1",b:"w1",type:"married",children:["c1","c2"]}],
+    },
+    history:[
+      {date:"2024-12-10",worker:"王社工",risk:"stable",summary:"親職功能恢復良好，子女就學正常。家庭功能評估達關閉標準，擬月底結案。"},
+      {date:"2024-10-29",worker:"王社工",risk:"stable",summary:"家庭功能持續改善，經濟狀況穩定，評估準備結案程序。"},
+    ]},
+];
+
+// ═══════════════════════════════
+// 資料持久化（localStorage）
+// ═══════════════════════════════
+const STORAGE_KEY = 'casemap_cases_v1';
+
+function loadCases(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      const parsed = JSON.parse(raw);
+      if(Array.isArray(parsed) && parsed.length>0) return parsed;
+    }
+  }catch(e){ console.warn('讀取本機資料失敗，改用預設示範資料', e); }
+  return JSON.parse(JSON.stringify(SEED_CASES));
+}
+function saveCases(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(CASES)); }
+  catch(e){ console.error('儲存失敗', e); showToast('⚠ 儲存失敗，瀏覽器儲存空間可能已滿'); }
+}
+function resetToSeedData(){
+  if(!confirm('這會清除所有你新增/修改過的資料，恢復成預設的示範資料，確定要繼續嗎？')) return;
+  CASES = JSON.parse(JSON.stringify(SEED_CASES));
+  saveCases();
+  location.reload();
+}
+
+let CASES = loadCases();
+
+// ═══════════════════════════════
+// STATE
+// ═══════════════════════════════
+
+let selected = new Set();
+let activeFilter = 'all';
+let activeCaseId = null;
+let currentRecordCaseId = null;
+let currentRecordIdx = null;
+let caseFormEditId = null;
+let visitFormCaseId = null;
+let visitFormIdx = null;
+let pickingLocation = false;
+const markers = {};
+
+// ═══════════════════════════════
+// MAP
+// ═══════════════════════════════
+
+const map = L.map('map',{center:[25.044,121.535],zoom:13,zoomControl:false,attributionControl:false});
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map);
+L.control.zoom({position:'bottomright'}).addTo(map);
+
+const legend = L.control({position:'bottomleft'});
+legend.onAdd = () => {
+  const d = L.DomUtil.create('div','map-legend');
+  d.innerHTML = `
+    <div class="legend-row"><div class="legend-dot" style="background:#ef4444"></div> 緊急</div>
+    <div class="legend-row"><div class="legend-dot" style="background:#f97316"></div> 關注</div>
+    <div class="legend-row"><div class="legend-dot" style="background:#16a34a"></div> 穩定</div>`;
+  return d;
+};
+legend.addTo(map);
+
+function riskColor(r){ return r==='urgent'?'#ef4444':r==='watch'?'#f97316':'#16a34a'; }
+function riskLabel(r){ return r==='urgent'?'🔴 緊急':r==='watch'?'🟠 關注':'🟢 穩定'; }
+
+function daysAgo(dateStr){
+  const d = new Date(dateStr);
+  const now = new Date();
+  return Math.floor((now-d)/(1000*60*60*24));
+}
+function isOverdue(c){ return daysAgo(c.lastVisit) > c.freqDays; }
+
+function rebuildMarkers(){
+  Object.values(markers).forEach(m => map.removeLayer(m));
+  for(const k in markers) delete markers[k];
+  CASES.forEach(c => {
+    const col = riskColor(c.risk);
+    const icon = L.divIcon({
+      html:`<div style="width:18px;height:18px;border-radius:50%;background:${col};border:2.5px solid white;box-shadow:0 2px 6px rgba(0,0,0,.25);transition:transform .15s;"></div>`,
+      iconSize:[18,18], iconAnchor:[9,9], className:''
+    });
+    const m = L.marker([c.lat,c.lon],{icon});
+    m.bindTooltip(buildHistTooltip(c), {direction:'top', offset:[0,-11], className:'hist-leaflet-tip'});
+    m.on('click',() => showCase(c.id));
+    m.addTo(map);
+    markers[c.id] = m;
+  });
+}
+rebuildMarkers();
+
+function refreshAll(){
+  saveCases();
+  rebuildMarkers();
+  renderList();
+  initStats();
+  if(activeCaseId && CASES.find(c=>c.id===activeCaseId)){
+    showCase(activeCaseId);
+  } else {
+    activeCaseId = null;
+    document.getElementById('ep').style.display='';
+    document.getElementById('dc').classList.remove('show');
+  }
+}
+
+let toastTimer = null;
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 2400);
+}
+
+function buildHistTooltip(c){
+  const recent = c.history.slice(0,3);
+  const rows = recent.map(h => `
+    <div class="hist-row">
+      <div class="hist-dot" style="background:${riskColor(h.risk)}"></div>
+      <div class="hist-body">
+        <div class="hist-date">${h.date} · ${h.worker}</div>
+        <div class="hist-summary">${h.summary}</div>
+      </div>
+    </div>`).join('');
+  const more = c.history.length > 3
+    ? `<div class="hist-more">還有 ${c.history.length-3} 筆紀錄 · 點擊查看完整時間軸</div>`
+    : `<div class="hist-more">點擊標記查看完整資訊</div>`;
+  return `<div class="hist-tip">
+    <div class="hist-tip-head"><span class="hist-tip-id">${c.id}</span><span class="hist-tip-type">${c.type} · ${c.area}</span></div>
+    ${rows}
+    ${more}
+  </div>`;
+}
+
+// ═══════════════════════════════
+// CASE LIST
+// ═══════════════════════════════
+
+function renderList(){
+  const q = document.getElementById('search').value.toLowerCase();
+  const list = document.getElementById('case-list');
+  const filtered = CASES.filter(c => {
+    const matchFilter = activeFilter==='all' || c.risk===activeFilter;
+    const matchSearch = !q || c.id.toLowerCase().includes(q) || c.type.includes(q) || c.area.includes(q);
+    return matchFilter && matchSearch;
+  });
+
+  list.innerHTML = filtered.map(c => {
+    const overdue = isOverdue(c);
+    const days = daysAgo(c.lastVisit);
+    const isSelected = selected.has(c.id);
+    return `<div class="case-item ${c.risk} ${activeCaseId===c.id?'selected':''}" onclick="showCase('${c.id}')">
+      <div class="case-cb ${isSelected?'checked':''}" onclick="event.stopPropagation();toggleSelect('${c.id}')"></div>
+      <div class="case-info">
+        <div class="case-id">${c.id}</div>
+        <div class="case-type">${c.type} · ${c.area}</div>
+        <div class="case-meta">
+          <span class="risk-badge risk-${c.risk}">${riskLabel(c.risk)}</span>
+          <span class="last-visit ${overdue?'overdue':''}">${overdue?'⚠ 已逾期 '+days+'天':'上訪 '+days+'天前'}</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function setFilter(f, btn){
+  activeFilter = f;
+  document.querySelectorAll('.fchip').forEach(b => b.classList.remove('act'));
+  btn.classList.add('act');
+  renderList();
+}
+function filterList(){ renderList(); }
+
+// ═══════════════════════════════
+// CASE DETAIL (RIGHT PANEL)
+// ═══════════════════════════════
+
+function showCase(id){
+  activeCaseId = id;
+  const c = CASES.find(x=>x.id===id);
+  if(!c) return;
+
+  document.getElementById('ep').style.display='none';
+  document.getElementById('dc').classList.add('show');
+
+  const col = riskColor(c.risk);
+  const days = daysAgo(c.lastVisit);
+  const overdue = isOverdue(c);
+
+  document.getElementById('d-id').textContent = c.id;
+  document.getElementById('d-type').textContent = c.type;
+  document.getElementById('d-risk').innerHTML = `<span style="color:${col};font-weight:600">${riskLabel(c.risk)}</span>`;
+  document.getElementById('d-area').textContent = c.area;
+  document.getElementById('d-worker').textContent = c.worker;
+  document.getElementById('d-open').textContent = c.open;
+  document.getElementById('d-last').innerHTML = `<span class="${overdue?'overdue':''}">${c.lastVisit}（${days}天前）</span>`;
+  document.getElementById('d-freq').textContent = `每 ${c.freqDays} 天`;
+  document.getElementById('d-overdue').innerHTML = overdue
+    ? `<span style="color:var(--red);font-weight:600">逾期 ${days-c.freqDays} 天</span>`
+    : `<span style="color:var(--green)">正常</span>`;
+
+  timelineExpanded = false;
+  renderTimeline(c);
+
+  const inRoute = selected.has(id);
+  document.getElementById('d-route-txt').textContent = inRoute ? '✓ 已加入路線（點擊移除）' : '＋ 加入今日路線';
+
+  map.flyTo([c.lat, c.lon], 15, {duration:0.8});
+  renderList();
+}
+
+// ═══════════════════════════════
+// TIMELINE
+// ═══════════════════════════════
+
+let timelineExpanded = false;
+
+function renderTimeline(c){
+  const el = document.getElementById('d-timeline');
+  const toggle = document.getElementById('d-tl-toggle');
+  el.innerHTML = c.history.map((h,i) => {
+    const col = riskColor(h.risk);
+    const hidden = (i>=2 && !timelineExpanded) ? 'tl-hidden' : '';
+    return `<div class="tl-item clickable ${hidden}" onclick="openRecordDetail('${c.id}',${i})">
+      <div class="tl-dot" style="background:${col}"></div>
+      <div class="tl-content">
+        <div class="tl-top"><span class="tl-date">${h.date}</span><span class="tl-worker">${h.worker}</span></div>
+        <div class="tl-summary">${h.summary}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  if(c.history.length > 2){
+    toggle.style.display = '';
+    toggle.textContent = timelineExpanded ? '收合紀錄 ▴' : `顯示完整紀錄（共 ${c.history.length} 筆） ▾`;
+  } else {
+    toggle.style.display = 'none';
+  }
+}
+
+function toggleTimeline(){
+  timelineExpanded = !timelineExpanded;
+  const c = CASES.find(x=>x.id===activeCaseId);
+  if(c) renderTimeline(c);
+}
+
+// ═══════════════════════════════
+// GENOGRAM RENDERER（專業標準符號）
+// ═══════════════════════════════
+
+function renderGenogram(g){
+  const COLW=92, ROWH=104, SYM=32, PAD=36;
+  const maxX = Math.max(...g.members.map(m=>m.x));
+  const maxY = Math.max(...g.members.map(m=>m.y));
+  const width = PAD*2 + (maxX+1)*COLW;
+  const height = 28 + (maxY+1)*ROWH + 30;
+  const byId = id => g.members.find(m=>m.id===id);
+  const cx = m => PAD + m.x*COLW + COLW/2;
+  const cy = m => 26 + m.y*ROWH + ROWH/2;
+
+  let lines = '', symbols = '';
+
+  g.unions.forEach(u=>{
+    const A = byId(u.a);
+    const B = u.b ? byId(u.b) : null;
+    const ax=cx(A), ay=cy(A);
+    let unionX, unionY=ay;
+
+    if(B){
+      const bx=cx(B), by=cy(B);
+      unionX = (ax+bx)/2;
+      if(u.type==='divorced' || u.type==='separated'){
+        lines += `<line x1="${ax+SYM/2}" y1="${ay}" x2="${bx-SYM/2}" y2="${by}" stroke="#475569" stroke-width="2"/>`;
+        lines += `<line x1="${unionX-7}" y1="${unionY-9}" x2="${unionX+7}" y2="${unionY+9}" stroke="#475569" stroke-width="2"/>`;
+        if(u.type==='divorced'){
+          lines += `<line x1="${unionX-13}" y1="${unionY-9}" x2="${unionX+1}" y2="${unionY+9}" stroke="#475569" stroke-width="2"/>`;
+        }
+      } else if(u.type==='partner'){
+        lines += `<line x1="${ax+SYM/2}" y1="${ay}" x2="${bx-SYM/2}" y2="${by}" stroke="#475569" stroke-width="1.5" stroke-dasharray="3 4"/>`;
+      } else {
+        lines += `<line x1="${ax+SYM/2}" y1="${ay}" x2="${bx-SYM/2}" y2="${by}" stroke="#1e293b" stroke-width="2"/>`;
+      }
+    } else {
+      unionX = ax;
+    }
+
+    if(u.children && u.children.length){
+      const dropY = unionY + ROWH/2;
+      const childXs = u.children.map(cid=>cx(byId(cid)));
+      const allX = [unionX, ...childXs];
+      const minX = Math.min(...allX), maxXv = Math.max(...allX);
+      lines += `<line x1="${unionX}" y1="${unionY}" x2="${unionX}" y2="${dropY}" stroke="#1e293b" stroke-width="2"/>`;
+      lines += `<line x1="${minX}" y1="${dropY}" x2="${maxXv}" y2="${dropY}" stroke="#1e293b" stroke-width="2"/>`;
+      u.children.forEach(cid=>{
+        const C = byId(cid);
+        lines += `<line x1="${cx(C)}" y1="${dropY}" x2="${cx(C)}" y2="${cy(C)-SYM/2}" stroke="#1e293b" stroke-width="2"/>`;
+      });
+    }
+  });
+
+  g.members.forEach(m=>{
+    const x=cx(m), y=cy(m);
+    const stroke = m.isIndex ? '#2563eb' : '#1e293b';
+    const sw = m.isIndex ? 3 : 2;
+    if(m.gender==='M'){
+      symbols += `<rect x="${x-SYM/2}" y="${y-SYM/2}" width="${SYM}" height="${SYM}" fill="white" stroke="${stroke}" stroke-width="${sw}" rx="1"/>`;
+    } else {
+      symbols += `<circle cx="${x}" cy="${y}" r="${SYM/2}" fill="white" stroke="${stroke}" stroke-width="${sw}"/>`;
+    }
+    if(m.status==='deceased'){
+      symbols += `<line x1="${x-SYM/2-5}" y1="${y+SYM/2+5}" x2="${x+SYM/2+5}" y2="${y-SYM/2-5}" stroke="#ef4444" stroke-width="2"/>`;
+    }
+    if(m.isIndex){
+      symbols += `<text x="${x}" y="${y-SYM/2-7}" text-anchor="middle" font-size="8.5" fill="#2563eb" font-weight="700">本案當事人</text>`;
+    }
+    let ly = y + SYM/2 + 15;
+    symbols += `<text x="${x}" y="${ly}" text-anchor="middle" font-size="11" font-weight="600" fill="#1e293b">${m.name}</text>`;
+    ly += 13;
+    if(m.age){
+      symbols += `<text x="${x}" y="${ly}" text-anchor="middle" font-size="9.5" fill="#64748b">${m.age}歲</text>`;
+      ly += 12;
+    }
+    if(m.note){
+      symbols += `<text x="${x}" y="${ly}" text-anchor="middle" font-size="8.5" fill="#94a3b8">${m.note}</text>`;
+    }
+  });
+
+  return `<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;max-height:280px;display:block;">${lines}${symbols}</svg>`;
+}
+
+// ═══════════════════════════════
+// RECORD DETAIL GENERATOR（非旗艦案例：依類型/風險程序化生成）
+// ═══════════════════════════════
+
+const SERVICE_MAP = {
+  "獨居老人":["居家服務轉介","送餐服務確認","安全警報器檢查","緊急聯絡人核實","用藥安全確認"],
+  "兒童保護":["安全評估","親職教育轉介","跨單位通報協調","學校聯繫紀錄","身體狀況檢視"],
+  "身心障礙":["輔具申請追蹤","日照中心協調","照顧者喘息服務","復健進度確認","家屬照顧指導"],
+  "家庭暴力":["保護令進度確認","安全計畫檢視","心理諮商轉介","庇護資源說明","加害人動向了解"],
+  "精神健康":["服藥遵從性評估","精神科回診協調","情緒狀態評估","社區關懷連結","家屬支持資源說明"],
+  "低收入戶":["急難救助申請","就學費用協助","福利資源連結","收入狀況確認","就業媒合轉介"],
+  "未成年家長":["育兒技巧指導","托育補助申請","親職教育轉介","嬰幼兒健檢確認","心理支持服務"],
+  "更生人":["就業狀況確認","回診配合度評估","社區適應了解","家庭關係了解","法定義務說明"],
+  "新住民":["語言學習資源","就業許可協助","家庭關係了解","社區適應評估","福利資訊提供"],
+  "藥物濫用":["戒治配合度評估","尿液篩檢協調","家屬支持了解","危機處理","醫療轉介"],
+  "青少年輔導":["就學狀況確認","同儕關係了解","親職諮詢轉介","學校輔導室聯繫","行為觀察紀錄"],
+  "家庭支持":["家庭功能評估","經濟狀況確認","子女就學了解","結案準備評估","資源銜接確認"],
+};
+const METHOD_MAP = {urgent:["緊急訪視","陪同就醫","居家訪視"], watch:["居家訪視","電話訪視","陪同訪視"], stable:["電話訪視","居家訪視","定期關懷訪視"]};
+
+const RISK_GENERIC = {
+  urgent:{
+    subjective:"個案／家屬表示近期狀況不穩定，對目前處境感到壓力或不安，希望能獲得進一步協助。",
+    swot:{s:"案家本身仍具一定改善意願",w:"風險因子持續存在，尚未獲得有效控制",o:"尚有未充分運用之外部資源可連結",t:"若未及時介入，風險可能持續惡化"},
+    plan:{short:"安排密集訪視並確認立即安全狀況",mid:"啟動跨單位（社政／醫療／警政）協調，降低風險",long:"建立穩定支持系統，降低風險重複發生"},
+  },
+  watch:{
+    subjective:"個案表示目前狀況尚可，會配合既定服務安排，惟仍有部分擔心或困擾。",
+    swot:{s:"具備一定自我照顧或調適能力",w:"仍有需持續關注之風險因子",o:"具備可進一步運用之社區或正式資源",t:"潛在壓力源若未緩解，可能影響案況穩定性"},
+    plan:{short:"持續觀察並確認既有服務銜接情形",mid:"檢視服務成效，視需要調整資源連結",long:"促進案家功能提升，朝穩定狀態邁進"},
+  },
+  stable:{
+    subjective:"個案表示生活狀況穩定，目前無特殊困難或迫切需求。",
+    swot:{s:"案況穩定，具良好支持系統",w:"仍有少數待觀察之生活面向",o:"可評估銜接其他更適切服務或結案規劃",t:"外部環境變動仍可能對案況帶來影響"},
+    plan:{short:"維持目前訪視頻率，持續關懷",mid:"留意是否有新增需求，適時調整服務",long:"評估結案可能性或轉銜社區自然支持網絡"},
+  },
+};
+
+const TYPE_DIMS = {
+  "獨居老人":{bio:"行動能力與自理狀況為觀察重點",psycho:"情緒狀態大致穩定，需留意孤獨感",social:"社區或鄰里支持為主要資源",eco:"經濟狀況尚可維持基本生活開銷"},
+  "兒童保護":{bio:"生長發育及身體狀況為檢視重點",psycho:"情緒及行為表現需持續觀察",social:"家庭照顧分工及親屬支持為關鍵",eco:"家庭經濟狀況可能影響照顧資源"},
+  "身心障礙":{bio:"功能狀況及輔具使用為觀察重點",psycho:"情緒適應狀況尚可",social:"家屬照顧負荷及機構服務銜接為重點",eco:"福利補助及輔具費用為主要經濟議題"},
+  "家庭暴力":{bio:"身體傷勢復原狀況為觀察重點",psycho:"創傷反應及情緒復原為核心議題",social:"安全網絡及親屬支持為重要資源",eco:"經濟自主能力為後續安全規劃關鍵"},
+  "精神健康":{bio:"服藥遵從性及生理狀況為觀察重點",psycho:"情緒及精神症狀穩定度為核心",social:"社區關懷及家屬支持為重要資源",eco:"經濟狀況尚可，無急迫議題"},
+  "低收入戶":{bio:"基本生理需求滿足狀況為觀察重點",psycho:"經濟壓力下之情緒狀態需留意",social:"親屬及社區支持資源為輔助",eco:"家庭經濟狀況為核心議題"},
+  "未成年家長":{bio:"育兒照顧能力及自身健康為觀察重點",psycho:"角色適應及情緒支持為核心議題",social:"原生家庭及伴侶支持為重要資源",eco:"經濟自立能力為長期關注議題"},
+  "更生人":{bio:"生理健康狀況穩定",psycho:"自我效能及社會適應為觀察重點",social:"就業及人際關係為重要資源",eco:"穩定就業為經濟自立關鍵"},
+  "新住民":{bio:"生理健康狀況穩定",psycho:"文化適應及情緒狀態為觀察重點",social:"配偶家庭及社區支持為重要資源",eco:"就業狀況為經濟自主關鍵"},
+  "藥物濫用":{bio:"戒治生理狀況及篩檢結果為觀察重點",psycho:"情緒穩定度及復發風險為核心議題",social:"家屬支持及社會復歸為重要資源",eco:"穩定就業有助降低復發風險"},
+  "青少年輔導":{bio:"生理發展狀況穩定",psycho:"情緒及行為表現為核心觀察重點",social:"同儕關係及親職支持為重要資源",eco:"家庭經濟狀況尚可"},
+  "家庭支持":{bio:"家庭成員生理健康狀況穩定",psycho:"家庭成員情緒互動為觀察重點",social:"親屬及社區支持網絡逐步恢復",eco:"家庭經濟狀況持續改善中"},
+};
+
+function buildGenericDetail(c,h,idx){
+  const g = RISK_GENERIC[h.risk] || RISK_GENERIC.watch;
+  const dims = TYPE_DIMS[c.type] || {bio:"生理狀況穩定",psycho:"情緒狀態穩定",social:"社會支持網絡尚可",eco:"經濟狀況穩定"};
+  let status = "新增";
+  if(idx < c.history.length-1){
+    status = (c.history[idx].risk === c.history[idx+1].risk) ? "持續" : "已調整";
+  }
+  const methods = METHOD_MAP[h.risk] || METHOD_MAP.watch;
+  const method = methods[idx % methods.length];
+  const duration = h.risk==='urgent' ? 55+(idx*6)%30 : 25+(idx*9)%25;
+  const services = (SERVICE_MAP[c.type]||["關懷訪視","資源連結"]).slice(0, h.risk==='urgent'?4:2+(idx%2));
+  return {
+    subjective:g.subjective, objective:h.summary,
+    bio:dims.bio, psycho:dims.psycho, social:dims.social, eco:dims.eco,
+    swot:g.swot,
+    plan:{
+      short:{text:g.plan.short, status},
+      mid:{text:g.plan.mid, status},
+      long:{text:g.plan.long, status},
+    },
+    method, duration, services,
+  };
+}
+
+function getRecordDetail(c,h,idx){ return h.detail || buildGenericDetail(c,h,idx); }
+
+// ═══════════════════════════════
+// MODAL: TAB SWITCHING
+// ═══════════════════════════════
+
+function switchTab(name){
+  document.querySelectorAll('.modal-tab').forEach(t => t.classList.toggle('active', t.dataset.tab===name));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.dataset.panel===name));
+}
+
+// ═══════════════════════════════
+// MODAL: OPEN / CLOSE
+// ═══════════════════════════════
+
+function openRecordDetail(caseId, idx){
+  const c = CASES.find(x=>x.id===caseId);
+  if(!c) return;
+  const h = c.history[idx];
+  if(!h) return;
+  currentRecordCaseId = caseId;
+  currentRecordIdx = idx;
+  const d = getRecordDetail(c,h,idx);
+  const col = riskColor(h.risk);
+
+  document.getElementById('m-date').textContent = `${c.id} · ${h.date}`;
+  document.getElementById('m-sub').textContent = `${c.type} · ${c.area} · 訪視社工：${h.worker}`;
+  const badge = document.getElementById('m-risk-badge');
+  badge.textContent = riskLabel(h.risk);
+  badge.style.background = col+'18'; badge.style.color = col; badge.style.border = `1px solid ${col}40`;
+
+  // TAB 基本資料
+  document.getElementById('m-basic').innerHTML = `
+    <div class="m-grid">
+      <div class="m-field"><div class="m-field-l">性別</div><div class="m-field-v">${c.gender}</div></div>
+      <div class="m-field"><div class="m-field-l">年齡</div><div class="m-field-v">${c.age} 歲</div></div>
+      <div class="m-field"><div class="m-field-l">同住狀況</div><div class="m-field-v">${c.household}</div></div>
+      <div class="m-field"><div class="m-field-l">居住型態</div><div class="m-field-v">${c.living}</div></div>
+      <div class="m-field"><div class="m-field-l">開案日期</div><div class="m-field-v">${c.open}</div></div>
+      <div class="m-field"><div class="m-field-l">負責社工</div><div class="m-field-v">${c.worker}</div></div>
+    </div>
+    <div class="m-section" style="margin-top:12px;margin-bottom:0">
+      <div class="m-sec-title">開案緣由</div>
+      <div class="m-text-block">${c.openReason}</div>
+    </div>`;
+
+  // TAB 家系圖
+  const genoEl = document.getElementById('m-genogram');
+  if(c.genogram){
+    genoEl.innerHTML = `
+      <div class="geno-wrap">${renderGenogram(c.genogram)}</div>
+      <div class="geno-legend">
+        <div class="gl-item"><svg width="16" height="16"><rect x="2" y="2" width="12" height="12" fill="white" stroke="#1e293b" stroke-width="2"/></svg>男性</div>
+        <div class="gl-item"><svg width="16" height="16"><circle cx="8" cy="8" r="6" fill="white" stroke="#1e293b" stroke-width="2"/></svg>女性</div>
+        <div class="gl-item"><svg width="18" height="16"><line x1="2" y1="13" x2="14" y2="3" stroke="#ef4444" stroke-width="2"/></svg>已故</div>
+        <div class="gl-item"><span class="gl-line"></span>婚姻關係</div>
+        <div class="gl-item"><span class="gl-line dashed"></span>同居伴侶</div>
+        <div class="gl-item"><svg width="18" height="16"><line x1="3" y1="3" x2="13" y2="13" stroke="#475569" stroke-width="2"/></svg>分居／離異</div>
+        <div class="gl-item"><span class="gl-box-blue"></span>本案當事人</div>
+      </div>`;
+  } else {
+    genoEl.innerHTML = `<div class="geno-empty">📋 本案家系圖尚待建立<br><span style="font-size:10px;color:#94a3b8">（示範資料未涵蓋此案，正式系統應由社工依訪視內容建檔）</span></div>`;
+  }
+
+  // TAB 訪視紀錄
+  document.getElementById('m-method').textContent = d.method;
+  document.getElementById('m-duration').textContent = `約 ${d.duration} 分鐘`;
+  document.getElementById('m-subjective').textContent = d.subjective;
+  document.getElementById('m-objective').textContent = d.objective;
+  document.getElementById('m-services').innerHTML = d.services.map(s=>`<span class="m-service-tag">${s}</span>`).join('');
+
+  // TAB 四面項評估
+  document.getElementById('m-bio').textContent = d.bio;
+  document.getElementById('m-psycho').textContent = d.psycho;
+  document.getElementById('m-social').textContent = d.social;
+  document.getElementById('m-eco').textContent = d.eco;
+  document.getElementById('m-swot-s').textContent = d.swot.s;
+  document.getElementById('m-swot-w').textContent = d.swot.w;
+  document.getElementById('m-swot-o').textContent = d.swot.o;
+  document.getElementById('m-swot-t').textContent = d.swot.t;
+
+  // TAB 處遇計畫
+  const statusClassMap = {'新增':'st-new','持續':'st-cont','已調整':'st-adj','已達成':'st-done'};
+  document.getElementById('m-plan').innerHTML = ['short','mid','long'].map(k=>{
+    const label = k==='short' ? '短期目標（1–2週）' : k==='mid' ? '中期目標（1–3個月）' : '長期目標（3個月以上）';
+    const p = d.plan[k];
+    const sc = statusClassMap[p.status] || 'st-cont';
+    return `<div class="plan-row">
+      <div class="plan-top"><span class="plan-label">${label}</span><span class="plan-status ${sc}">${p.status}</span></div>
+      <div class="plan-text">${p.text}</div>
+    </div>`;
+  }).join('');
+
+  switchTab('visit');
+  document.getElementById('modal-overlay').classList.add('show');
+}
+
+function closeRecordDetail(){
+  document.getElementById('modal-overlay').classList.remove('show');
+}
+
+// ═══════════════════════════════
+// CASE CRUD（新增／編輯／刪除個案）
+// ═══════════════════════════════
+
+function openCaseForm(caseId){
+  caseFormEditId = caseId || null;
+  pickingLocation = false;
+  const title = document.getElementById('cf-title');
+  if(caseId){
+    const c = CASES.find(x=>x.id===caseId);
+    if(!c) return;
+    title.textContent = `編輯個案 · ${c.id}`;
+    document.getElementById('cf-id').value = c.id;
+    document.getElementById('cf-id').disabled = true;
+    document.getElementById('cf-type').value = c.type||'';
+    document.getElementById('cf-area').value = c.area||'';
+    document.getElementById('cf-worker').value = c.worker||'';
+    document.getElementById('cf-risk').value = c.risk||'watch';
+    document.getElementById('cf-freq').value = c.freqDays||14;
+    document.getElementById('cf-gender').value = c.gender||'女';
+    document.getElementById('cf-age').value = c.age||'';
+    document.getElementById('cf-household').value = c.household||'';
+    document.getElementById('cf-living').value = c.living||'';
+    document.getElementById('cf-open').value = c.open||'';
+    document.getElementById('cf-lastvisit').value = c.lastVisit||'';
+    document.getElementById('cf-reason').value = c.openReason||'';
+    document.getElementById('cf-lat').value = c.lat;
+    document.getElementById('cf-lon').value = c.lon;
+  } else {
+    title.textContent = '新增個案';
+    ['cf-id','cf-type','cf-area','cf-worker','cf-age','cf-household','cf-living','cf-reason','cf-lastvisit'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('cf-id').disabled = false;
+    document.getElementById('cf-risk').value = 'watch';
+    document.getElementById('cf-freq').value = 14;
+    document.getElementById('cf-gender').value = '女';
+    document.getElementById('cf-open').value = new Date().toISOString().slice(0,10);
+    const c = map.getCenter();
+    document.getElementById('cf-lat').value = c.lat.toFixed(4);
+    document.getElementById('cf-lon').value = c.lng.toFixed(4);
+  }
+  document.getElementById('cf-pick-btn').classList.remove('active');
+  document.getElementById('case-form-overlay').classList.add('show');
+}
+
+function closeCaseForm(){
+  pickingLocation = false;
+  document.getElementById('cf-pick-btn').classList.remove('active');
+  document.getElementById('case-form-overlay').classList.remove('show');
+}
+
+function togglePickLocation(){
+  pickingLocation = !pickingLocation;
+  document.getElementById('cf-pick-btn').classList.toggle('active', pickingLocation);
+  document.getElementById('cf-pick-hint').textContent = pickingLocation
+    ? '請直接在地圖上點一下要設定的位置…（點擊後會自動帶入座標）'
+    : '點擊按鈕後，直接在地圖上點一下即可帶入座標（建議先套用地理模糊化再存正式資料）';
+}
+
+function submitCaseForm(){
+  const id = document.getElementById('cf-id').value.trim();
+  const type = document.getElementById('cf-type').value.trim();
+  if(!id || !type){ showToast('⚠ 案號與服務類型為必填'); return; }
+  if(!caseFormEditId && CASES.find(x=>x.id===id)){ showToast('⚠ 這個案號已經存在了'); return; }
+
+  const data = {
+    id, type,
+    area: document.getElementById('cf-area').value.trim(),
+    worker: document.getElementById('cf-worker').value.trim(),
+    risk: document.getElementById('cf-risk').value,
+    freqDays: parseInt(document.getElementById('cf-freq').value)||14,
+    gender: document.getElementById('cf-gender').value,
+    age: parseInt(document.getElementById('cf-age').value)||null,
+    household: document.getElementById('cf-household').value.trim(),
+    living: document.getElementById('cf-living').value.trim(),
+    open: document.getElementById('cf-open').value,
+    lastVisit: document.getElementById('cf-lastvisit').value || document.getElementById('cf-open').value,
+    openReason: document.getElementById('cf-reason').value.trim(),
+    lat: parseFloat(document.getElementById('cf-lat').value),
+    lon: parseFloat(document.getElementById('cf-lon').value),
+  };
+
+  if(caseFormEditId){
+    const idx = CASES.findIndex(x=>x.id===caseFormEditId);
+    CASES[idx] = {...CASES[idx], ...data};
+    showToast('✓ 個案已更新');
+    activeCaseId = caseFormEditId;
+  } else {
+    data.genogram = null;
+    data.history = [];
+    CASES.unshift(data);
+    showToast('✓ 已新增個案');
+    activeCaseId = id;
+  }
+  closeCaseForm();
+  refreshAll();
+}
+
+function deleteCase(caseId){
+  if(!caseId) return;
+  const c = CASES.find(x=>x.id===caseId);
+  if(!c) return;
+  if(!confirm(`確定要刪除個案「${c.id}」嗎？此動作無法復原。`)) return;
+  CASES = CASES.filter(x=>x.id!==caseId);
+  if(activeCaseId===caseId) activeCaseId = null;
+  selected.delete(caseId);
+  showToast('✓ 已刪除個案');
+  refreshAll();
+  updateRouteBar();
+}
+
+// 地圖點選位置（新增/編輯個案表單開啟時才生效）
+map.on('click', (e) => {
+  if(!pickingLocation) return;
+  document.getElementById('cf-lat').value = e.latlng.lat.toFixed(4);
+  document.getElementById('cf-lon').value = e.latlng.lng.toFixed(4);
+  pickingLocation = false;
+  document.getElementById('cf-pick-btn').classList.remove('active');
+  document.getElementById('cf-pick-hint').textContent = '✓ 已帶入座標';
+});
+
+// ═══════════════════════════════
+// VISIT RECORD CRUD（新增／編輯／刪除訪視紀錄）
+// ═══════════════════════════════
+
+function openVisitForm(caseId, idx=null){
+  if(!caseId) return;
+  const c = CASES.find(x=>x.id===caseId);
+  if(!c) return;
+  visitFormCaseId = caseId;
+  visitFormIdx = idx;
+
+  document.getElementById('vf-sub').textContent = `${c.id} · ${c.type}`;
+  const title = document.getElementById('vf-title');
+
+  if(idx !== null && c.history[idx]){
+    const h = c.history[idx];
+    const d = getRecordDetail(c, h, idx);
+    title.textContent = '編輯訪視紀錄';
+    document.getElementById('vf-date').value = h.date||'';
+    document.getElementById('vf-worker').value = h.worker||'';
+    document.getElementById('vf-risk').value = h.risk||'watch';
+    document.getElementById('vf-summary').value = h.summary||'';
+    document.getElementById('vf-method').value = d.method||'';
+    document.getElementById('vf-duration').value = d.duration||'';
+    document.getElementById('vf-services').value = (d.services||[]).join(', ');
+    document.getElementById('vf-subjective').value = d.subjective||'';
+    document.getElementById('vf-objective').value = d.objective||'';
+    document.getElementById('vf-bio').value = d.bio||'';
+    document.getElementById('vf-psycho').value = d.psycho||'';
+    document.getElementById('vf-social').value = d.social||'';
+    document.getElementById('vf-eco').value = d.eco||'';
+    document.getElementById('vf-swot-s').value = d.swot.s||'';
+    document.getElementById('vf-swot-w').value = d.swot.w||'';
+    document.getElementById('vf-swot-o').value = d.swot.o||'';
+    document.getElementById('vf-swot-t').value = d.swot.t||'';
+    document.getElementById('vf-plan-short-text').value = d.plan.short.text||'';
+    document.getElementById('vf-plan-short-status').value = d.plan.short.status||'新增';
+    document.getElementById('vf-plan-mid-text').value = d.plan.mid.text||'';
+    document.getElementById('vf-plan-mid-status').value = d.plan.mid.status||'新增';
+    document.getElementById('vf-plan-long-text').value = d.plan.long.text||'';
+    document.getElementById('vf-plan-long-status').value = d.plan.long.status||'新增';
+  } else {
+    title.textContent = '新增訪視紀錄';
+    ['vf-worker','vf-summary','vf-method','vf-duration','vf-services','vf-subjective','vf-objective',
+     'vf-bio','vf-psycho','vf-social','vf-eco','vf-swot-s','vf-swot-w','vf-swot-o','vf-swot-t',
+     'vf-plan-short-text','vf-plan-mid-text','vf-plan-long-text'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('vf-date').value = new Date().toISOString().slice(0,10);
+    document.getElementById('vf-worker').value = c.worker||'';
+    document.getElementById('vf-risk').value = c.risk||'watch';
+    document.getElementById('vf-plan-short-status').value = '新增';
+    document.getElementById('vf-plan-mid-status').value = '新增';
+    document.getElementById('vf-plan-long-status').value = '新增';
+  }
+  closeRecordDetail();
+  document.getElementById('visit-form-overlay').classList.add('show');
+}
+
+function closeVisitForm(){
+  document.getElementById('visit-form-overlay').classList.remove('show');
+}
+
+function submitVisitForm(){
+  const date = document.getElementById('vf-date').value;
+  const summary = document.getElementById('vf-summary').value.trim();
+  if(!date || !summary){ showToast('⚠ 訪視日期與訪視摘要為必填'); return; }
+  const c = CASES.find(x=>x.id===visitFormCaseId);
+  if(!c) return;
+
+  const services = document.getElementById('vf-services').value.split(',').map(s=>s.trim()).filter(Boolean);
+  const record = {
+    date,
+    worker: document.getElementById('vf-worker').value.trim(),
+    risk: document.getElementById('vf-risk').value,
+    summary,
+    detail: {
+      method: document.getElementById('vf-method').value.trim(),
+      duration: parseInt(document.getElementById('vf-duration').value)||0,
+      subjective: document.getElementById('vf-subjective').value.trim(),
+      objective: document.getElementById('vf-objective').value.trim(),
+      services,
+      bio: document.getElementById('vf-bio').value.trim(),
+      psycho: document.getElementById('vf-psycho').value.trim(),
+      social: document.getElementById('vf-social').value.trim(),
+      eco: document.getElementById('vf-eco').value.trim(),
+      swot: {
+        s: document.getElementById('vf-swot-s').value.trim(),
+        w: document.getElementById('vf-swot-w').value.trim(),
+        o: document.getElementById('vf-swot-o').value.trim(),
+        t: document.getElementById('vf-swot-t').value.trim(),
+      },
+      plan: {
+        short: {text: document.getElementById('vf-plan-short-text').value.trim(), status: document.getElementById('vf-plan-short-status').value},
+        mid: {text: document.getElementById('vf-plan-mid-text').value.trim(), status: document.getElementById('vf-plan-mid-status').value},
+        long: {text: document.getElementById('vf-plan-long-text').value.trim(), status: document.getElementById('vf-plan-long-status').value},
+      },
+    },
+  };
+
+  if(visitFormIdx !== null){
+    c.history[visitFormIdx] = record;
+    showToast('✓ 訪視紀錄已更新');
+  } else {
+    c.history.unshift(record);
+    c.lastVisit = date;
+    c.risk = record.risk;
+    showToast('✓ 已新增訪視紀錄');
+  }
+  closeVisitForm();
+  activeCaseId = c.id;
+  refreshAll();
+}
+
+function editCurrentRecord(){
+  if(currentRecordCaseId===null || currentRecordIdx===null) return;
+  openVisitForm(currentRecordCaseId, currentRecordIdx);
+}
+
+function deleteCurrentRecord(){
+  if(currentRecordCaseId===null || currentRecordIdx===null) return;
+  const c = CASES.find(x=>x.id===currentRecordCaseId);
+  if(!c) return;
+  if(!confirm('確定要刪除這筆訪視紀錄嗎？此動作無法復原。')) return;
+  c.history.splice(currentRecordIdx, 1);
+  if(c.history.length>0){
+    c.lastVisit = c.history[0].date;
+    c.risk = c.history[0].risk;
+  }
+  closeRecordDetail();
+  showToast('✓ 已刪除訪視紀錄');
+  activeCaseId = c.id;
+  refreshAll();
+}
+
+// ═══════════════════════════════
+// ROUTE SELECTION
+// ═══════════════════════════════
+
+function toggleSelect(id){
+  if(selected.has(id)){ selected.delete(id); } else { selected.add(id); }
+  updateRouteBar();
+  renderList();
+  if(activeCaseId===id){
+    document.getElementById('d-route-txt').textContent = selected.has(id)?'✓ 已加入路線（點擊移除）':'＋ 加入今日路線';
+  }
+  CASES.forEach(c => {
+    const m = markers[c.id];
+    const col = riskColor(c.risk);
+    const inRoute = selected.has(c.id);
+    const html = `<div style="
+      width:${inRoute?20:18}px;height:${inRoute?20:18}px;border-radius:50%;
+      background:${col};
+      border:${inRoute?'3px solid #2563eb':'2.5px solid white'};
+      box-shadow:${inRoute?'0 0 0 2px rgba(37,99,235,.3),':''}0 2px 6px rgba(0,0,0,.25);
+      transition:all .15s;
+    "></div>`;
+    const icon = L.divIcon({html, iconSize:[inRoute?20:18,inRoute?20:18], iconAnchor:[inRoute?10:9,inRoute?10:9], className:''});
+    m.setIcon(icon);
+  });
+}
+
+function toggleRoute(){
+  if(!activeCaseId) return;
+  toggleSelect(activeCaseId);
+  document.getElementById('d-route-txt').textContent = selected.has(activeCaseId)?'✓ 已加入路線（點擊移除）':'＋ 加入今日路線';
+}
+
+function updateRouteBar(){
+  const n = selected.size;
+  const btn = document.getElementById('route-btn');
+  const count = document.getElementById('route-count');
+  if(n===0){ count.innerHTML = '尚未選取個案'; btn.disabled = true; }
+  else { count.innerHTML = `已選取 <strong>${n}</strong> 個案 · 點下方開啟 Google Maps`; btn.disabled = false; }
+}
+
+// ═══════════════════════════════
+// GOOGLE MAPS INTEGRATION
+// ═══════════════════════════════
+
+function openGoogleMaps(){
+  const cases = CASES.filter(c => selected.has(c.id));
+  if(cases.length === 0) return;
+  const origin = '25.0375,121.5637';
+  const waypoints = cases.map(c => `${c.lat},${c.lon}`).join('/');
+  const url = `https://www.google.com/maps/dir/${origin}/${waypoints}/?travelmode=driving`;
+  window.open(url, '_blank');
+}
+
+function openSingleMap(){
+  if(!activeCaseId) return;
+  const c = CASES.find(x=>x.id===activeCaseId);
+  if(!c) return;
+  window.open(`https://www.google.com/maps/search/?api=1&query=${c.lat},${c.lon}`, '_blank');
+}
+
+// ═══════════════════════════════
+// STATS + INIT
+// ═══════════════════════════════
+
+function initStats(){
+  const today = new Date();
+  document.getElementById('today-date').textContent = today.toLocaleDateString('zh-TW',{year:'numeric',month:'long',day:'numeric'});
+  document.getElementById('h-urgent').textContent = CASES.filter(c=>c.risk==='urgent').length;
+  document.getElementById('h-due').textContent = CASES.filter(c=>isOverdue(c)).length;
+  document.getElementById('h-total').textContent = CASES.length;
+}
+
+document.addEventListener('keydown', e => { if(e.key==='Escape'){ closeRecordDetail(); closeCaseForm(); closeVisitForm(); } });
+
+initStats();
+renderList();
+</script>
+</body>
+</html>
