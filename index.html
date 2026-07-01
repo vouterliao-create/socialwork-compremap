@@ -266,6 +266,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
 
 /* Genogram */
 .geno-wrap{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;}
+.geno-preview-wrap{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;min-height:60px;}
 .geno-legend{display:flex;flex-wrap:wrap;gap:11px;font-size:9.5px;color:var(--muted);padding-top:2px;}
 .gl-item{display:flex;align-items:center;gap:4px;}
 .gl-line{width:18px;height:0;border-top:2px solid #1e293b;display:inline-block;}
@@ -674,6 +675,11 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
 
       <div id="cf-geno-unions-list"></div>
       <button type="button" class="geno-add-btn" onclick="addGenoUnion()">＋ 新增關係（婚姻／離婚／同居等）</button>
+
+      <div class="form-section-title">家系圖預覽</div>
+      <div class="geno-preview-wrap" id="cf-geno-preview">
+        <div class="geno-empty">尚未新增任何成員，畫面會在你新增成員後即時顯示</div>
+      </div>
 
       <div class="form-actions">
         <button class="form-btn secondary" onclick="closeCaseForm()">取消</button>
@@ -2235,6 +2241,7 @@ function escHtml(s){
 function updateGenoMemberField(id, field, value){
   const m = cfGenoMembers.find(x=>x.id===id);
   if(m) m[field] = value;
+  renderGenoPreview();
 }
 
 function unionTypeLabel(t){
@@ -2245,6 +2252,23 @@ function memberOptions(selectedId, allowNone){
   let opts = allowNone ? `<option value="" ${!selectedId?'selected':''}>（無／單親）</option>` : '';
   opts += cfGenoMembers.map(m => `<option value="${m.id}" ${m.id===selectedId?'selected':''}>${escHtml(m.name||'未命名成員')}</option>`).join('');
   return opts;
+}
+
+// 即時預覽：用目前建構工具裡的成員/關係資料，直接跑一次自動排版並畫出來
+function renderGenoPreview(){
+  const el = document.getElementById('cf-geno-preview');
+  if(!el) return;
+  if(cfGenoMembers.length === 0){
+    el.innerHTML = '<div class="geno-empty">尚未新增任何成員，畫面會在你新增成員後即時顯示</div>';
+    return;
+  }
+  try{
+    const laidOut = autoLayoutGenogram(cfGenoMembers, cfGenoUnions);
+    el.innerHTML = renderGenogram(laidOut);
+  }catch(e){
+    el.innerHTML = '<div class="geno-empty">預覽產生失敗，請檢查成員與關係設定</div>';
+    console.warn('家系圖預覽錯誤', e);
+  }
 }
 
 function renderGenoBuilder(){
@@ -2277,6 +2301,8 @@ function renderGenoBuilder(){
       <button type="button" class="geno-del" onclick="removeGenoUnion('${u.id}')">✕</button>
       <div class="geno-children-pick">子女：${cfGenoMembers.length ? cfGenoMembers.map(m=>`<label class="geno-chk"><input type="checkbox" ${u.children.includes(m.id)?'checked':''} onchange="toggleUnionChild('${u.id}','${m.id}',this.checked)">${escHtml(m.name||'未命名')}</label>`).join('') : '（請先新增成員）'}</div>
     </div>`).join('') : '<div class="geno-empty-hint">尚未新增關係，點下方按鈕開始新增</div>';
+
+  renderGenoPreview();
 }
 
 function addGenoMember(){
@@ -2294,6 +2320,7 @@ function removeGenoMember(id){
 }
 function setGenoIndex(id){
   cfGenoMembers.forEach(m=>{ m.isIndex = (m.id===id); });
+  renderGenoPreview();
 }
 function addGenoUnion(){
   if(cfGenoMembers.length===0){ showToast('⚠ 請先新增至少一位成員'); return; }
@@ -2307,12 +2334,14 @@ function removeGenoUnion(id){
 function updateGenoUnionField(id, field, value){
   const u = cfGenoUnions.find(x=>x.id===id);
   if(u) u[field] = value || null;
+  renderGenoPreview();
 }
 function toggleUnionChild(unionId, memberId, checked){
   const u = cfGenoUnions.find(x=>x.id===unionId);
   if(!u) return;
   if(checked){ if(!u.children.includes(memberId)) u.children.push(memberId); }
   else { u.children = u.children.filter(c=>c!==memberId); }
+  renderGenoPreview();
 }
 
 function loadGenogramIntoBuilder(g){
