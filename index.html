@@ -2,8 +2,19 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>社工個案地理管理系統｜概念示範版 v4</title>
+
+<!-- PWA：讓手機瀏覽器可以「加入主畫面」，像 App 一樣開啟 -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2563eb">
+<link rel="icon" href="icons/icon-192.png">
+<!-- iOS Safari 專用（Apple 不吃標準 manifest，需要這幾行才會有正確圖示與全螢幕效果） -->
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="個案地圖">
+
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -17,6 +28,8 @@
   --gray:#6b7280;--surface:#ffffff;--bg:#f8fafc;
   --border:#e2e8f0;--text:#1e293b;--muted:#64748b;
   --font:'Noto Sans TC',sans-serif;
+  --closed:#6b7280;--closed-bg:#f1f5f9;--closed-border:#cbd5e1;
+  --reopen:#0ea5e9;--reopen-bg:#f0f9ff;--reopen-border:#bae6fd;
 }
 body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column;overflow:hidden;font-size:13px;}
 
@@ -25,8 +38,13 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
 .topbar-logo{font-size:15px;font-weight:600;color:var(--text);}
 .topbar-logo span{color:var(--blue);}
 .topbar-badge{font-size:10px;padding:2px 8px;background:#fef3c7;color:#92400e;border-radius:4px;border:1px solid #fde68a;font-weight:500;}
-.topbar-r{margin-left:auto;display:flex;align-items:center;gap:10px;}
-.topbar-stat{display:flex;flex-direction:column;align-items:flex-end;}
+.worker-filter-wrap{display:flex;align-items:center;gap:6px;margin-left:14px;padding-left:14px;border-left:1px solid var(--border);}
+.worker-filter-label{font-size:10px;color:var(--muted);white-space:nowrap;}
+#worker-filter{font-size:11px;padding:5px 9px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:var(--font);cursor:pointer;outline:none;}
+#worker-filter:focus{border-color:#93c5fd;}
+.topbar-r{margin-left:auto;display:flex;align-items:center;gap:8px;}
+.topbar-stat{display:flex;flex-direction:column;align-items:flex-end;background:none;border:none;font-family:var(--font);cursor:pointer;padding:4px 7px;border-radius:6px;transition:background .15s;}
+.topbar-stat:hover{background:var(--bg);}
 .ts-l{font-size:10px;color:var(--muted);}
 .ts-v{font-size:13px;font-weight:600;}
 .date-badge{font-size:11px;color:var(--muted);padding:4px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;}
@@ -41,12 +59,17 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
 .search-input{width:100%;padding:7px 10px 7px 30px;border:1px solid var(--border);border-radius:6px;font-family:var(--font);font-size:12px;color:var(--text);background:var(--bg);outline:none;transition:border-color .2s;}
 .search-input:focus{border-color:#93c5fd;}
 .search-icon{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;}
-.filter-row{display:flex;gap:5px;}
+.filter-row{display:flex;gap:5px;flex-wrap:wrap;}
 .fchip{font-size:10px;padding:3px 8px;border-radius:20px;border:1px solid var(--border);background:white;color:var(--muted);cursor:pointer;transition:all .15s;font-family:var(--font);}
 .fchip.all.act{background:#eff6ff;border-color:#93c5fd;color:var(--blue);}
 .fchip.urgent.act{background:var(--red-bg);border-color:var(--red-border);color:var(--red);}
 .fchip.watch.act{background:var(--orange-bg);border-color:var(--orange-border);color:var(--orange);}
 .fchip.stable.act{background:var(--green-bg);border-color:var(--green-border);color:var(--green);}
+.fchip.closed.act{background:var(--closed-bg);border-color:var(--closed-border);color:var(--closed);}
+.fchip.reopened.act{background:var(--reopen-bg);border-color:var(--reopen-border);color:var(--reopen);}
+
+.filter-status-bar{display:none;align-items:center;justify-content:space-between;gap:8px;padding:7px 10px;margin-top:8px;background:var(--blue-bg);border:1px solid var(--blue-border);border-radius:7px;font-size:10.5px;color:var(--blue);}
+.filter-status-bar button{font-size:10px;padding:3px 9px;border-radius:14px;border:1px solid var(--blue-border);background:white;color:var(--blue);cursor:pointer;font-family:var(--font);flex-shrink:0;}
 
 /* Case list */
 .case-list{flex:1;overflow-y:auto;padding:6px 0;}
@@ -55,6 +78,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
 .case-item.selected{background:#eff6ff;border-left-color:var(--blue);}
 .case-item.urgent{border-left-color:var(--red);}
 .case-item.urgent.selected{background:var(--red-bg);}
+.case-item.closed{border-left-color:var(--closed);}
+.case-item.closed .case-id, .case-item.closed .case-type{color:var(--muted);}
+.reopen-badge{font-size:9px;padding:1px 6px;border-radius:3px;font-weight:500;background:var(--reopen-bg);color:var(--reopen);border:1px solid var(--reopen-border);margin-left:4px;}
 .case-cb{width:15px;height:15px;border:1.5px solid var(--border);border-radius:3px;flex-shrink:0;margin-top:2px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;}
 .case-cb.checked{background:var(--blue);border-color:var(--blue);}
 .case-cb.checked::after{content:'✓';color:white;font-size:9px;}
@@ -66,6 +92,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
 .risk-urgent{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);}
 .risk-watch{background:var(--orange-bg);color:var(--orange);border:1px solid var(--orange-border);}
 .risk-stable{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);}
+.risk-closed{background:var(--closed-bg);color:var(--closed);border:1px solid var(--closed-border);}
 .last-visit{font-size:10px;color:var(--muted);}
 .overdue{color:var(--red) !important;font-weight:500;}
 
@@ -250,10 +277,82 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
 .leaflet-tooltip.hist-leaflet-tip{background:white;border:1px solid var(--border);border-radius:10px;padding:10px 12px;box-shadow:0 6px 20px rgba(0,0,0,.14);opacity:1 !important;}
 .leaflet-tooltip.hist-leaflet-tip::before{border-top-color:white;}
 
-/* Legend */
-.map-legend{background:white;border:1px solid var(--border);border-radius:8px;padding:8px 10px;box-shadow:0 2px 8px rgba(0,0,0,.08);}
-.legend-row{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--text);padding:2px 0;}
-.legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+/* ═══════════════════════════════
+   手機版排版（螢幕寬度 ≤ 860px 時啟用）
+   桌面版三欄並排；手機版改成「地圖／清單／詳情」三個分頁互相切換
+   ═══════════════════════════════ */
+.mobile-tabbar{display:none;}
+@media (max-width: 860px){
+  body{padding-bottom:0;}
+  .main{position:relative; height:calc(100vh - 46px - 58px);}
+  .lp, .rp{width:100% !important; display:none;}
+  #map{width:100% !important; display:none;}
+  .main.mv-map #map{display:block;}
+  .main.mv-list .lp{display:flex;}
+  .main.mv-detail .rp{display:flex;}
+
+  .mobile-tabbar{
+    display:flex; position:fixed; left:0; right:0; bottom:0; height:58px;
+    background:white; border-top:1px solid var(--border); z-index:900;
+    box-shadow:0 -2px 10px rgba(0,0,0,.05);
+  }
+  .mobile-tab{
+    flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:2px; font-size:10.5px; color:var(--muted); background:none; border:none;
+    font-family:var(--font); cursor:pointer;
+  }
+  .mobile-tab .mt-icon{font-size:17px; line-height:1;}
+  .mobile-tab.active{color:var(--blue); font-weight:600;}
+
+  .modal-card{width:94vw !important; max-width:94vw;}
+  .form-row{grid-template-columns:1fr !important;}
+  .topbar{padding:0 10px; gap:8px;}
+  .topbar-logo{font-size:13px;}
+  .topbar-badge{display:none;}
+  .worker-filter-wrap{margin-left:6px;padding-left:6px;}
+  .worker-filter-label{display:none;}
+  #worker-filter{font-size:10px;padding:4px 6px;max-width:70px;}
+  .topbar-r{gap:6px;}
+  .topbar-stat{align-items:flex-end;}
+  .ts-l{font-size:9px;}
+  .ts-v{font-size:12px;}
+  .date-badge{display:none;}
+}
+@media (min-width: 861px){
+  .mobile-tabbar{display:none !important;}
+}
+
+/* GENOGRAM BUILDER（新增/編輯個案表單內） */
+.geno-builder-hint{font-size:10px;color:var(--muted);margin-bottom:8px;line-height:1.6;}
+.geno-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:7px;margin-bottom:6px;}
+.geno-row input[type=text], .geno-row input:not([type]){flex:1 1 90px;min-width:70px;padding:5px 7px;border:1px solid var(--border);border-radius:5px;font-family:var(--font);font-size:11px;background:white;}
+.geno-row input[type=number]{width:56px;padding:5px 7px;border:1px solid var(--border);border-radius:5px;font-family:var(--font);font-size:11px;background:white;}
+.geno-row select{padding:5px 6px;border:1px solid var(--border);border-radius:5px;font-family:var(--font);font-size:11px;background:white;}
+.geno-chk{display:flex;align-items:center;gap:3px;font-size:10px;color:var(--text);white-space:nowrap;}
+.geno-del{margin-left:auto;background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;padding:2px 6px;border-radius:5px;}
+.geno-del:hover{background:var(--red-bg);color:var(--red);}
+.geno-union-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:7px;margin-bottom:6px;}
+.geno-union-row select{padding:5px 6px;border:1px solid var(--border);border-radius:5px;font-family:var(--font);font-size:11px;background:white;}
+.geno-children-pick{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:10px;color:var(--muted);width:100%;margin-top:4px;}
+.geno-empty-hint{font-size:10.5px;color:var(--muted);text-align:center;padding:14px;border:1px dashed var(--border);border-radius:7px;background:var(--bg);}
+.geno-add-btn{width:100%;padding:7px;border-radius:6px;border:1px dashed #93c5fd;background:var(--blue-bg);color:var(--blue);font-family:var(--font);font-size:11px;font-weight:600;cursor:pointer;margin-bottom:10px;}
+.geno-add-btn:hover{background:#dbeafe;}
+
+/* 社福資源清單 */
+.resource-list{display:flex;flex-direction:column;gap:6px;}
+.resource-subtitle{font-size:9px;font-weight:700;letter-spacing:.5px;color:var(--muted);text-transform:uppercase;margin:10px 0 4px;}
+.resource-subtitle:first-child{margin-top:0;}
+.program-item{display:flex;flex-direction:column;gap:2px;padding:7px 10px;background:var(--green-bg);border:1px solid var(--green-border);border-radius:7px;margin-bottom:6px;}
+.program-name{font-size:11px;color:var(--blue);font-weight:600;text-decoration:none;display:inline-block;}
+.program-name:hover{text-decoration:underline;}
+.program-agency{font-size:9px;color:var(--muted);}
+.resource-item{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 10px;background:var(--bg);border:1px solid var(--border);border-radius:7px;}
+.resource-name{font-size:11px;color:var(--text);font-weight:500;}
+.resource-desc{font-size:9.5px;color:var(--muted);margin-top:1px;}
+.resource-tel{font-size:11px;font-weight:700;color:var(--blue);text-decoration:none;flex-shrink:0;padding:4px 10px;border-radius:14px;background:var(--blue-bg);border:1px solid var(--blue-border);}
+.hist-res-title{font-size:9px;font-weight:700;color:var(--muted);letter-spacing:.5px;margin:8px 0 4px;padding-top:8px;border-top:1px solid #f1f5f9;}
+.hist-res-item{font-size:10px;color:#334155;padding:2px 0;}
+.hist-res-item a{color:var(--blue);text-decoration:none;font-weight:600;}
 </style>
 </head>
 <body>
@@ -262,24 +361,46 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
 <div class="topbar">
   <div class="topbar-logo">社工個案<span>管理系統</span></div>
   <div class="topbar-badge">⚠ 概念示範版 v4 · 虛構資料</div>
+  <div class="worker-filter-wrap">
+    <label for="worker-filter" class="worker-filter-label">社工</label>
+    <select id="worker-filter" onchange="setWorkerFilter(this.value)">
+      <option value="all">全部社工</option>
+    </select>
+  </div>
   <div class="topbar-r">
-    <div class="topbar-stat">
+    <button class="topbar-stat" onclick="statFilter('urgent')" title="點擊查看緊急個案清單">
       <div class="ts-l">緊急個案</div>
       <div class="ts-v" style="color:var(--red)" id="h-urgent">—</div>
-    </div>
-    <div class="topbar-stat">
-      <div class="ts-l">待訪視</div>
-      <div class="ts-v" style="color:var(--orange)" id="h-due">—</div>
-    </div>
-    <div class="topbar-stat">
-      <div class="ts-l">本月總案</div>
+    </button>
+    <button class="topbar-stat" onclick="statFilter('watch')" title="點擊查看關注個案清單">
+      <div class="ts-l">關注個案</div>
+      <div class="ts-v" style="color:var(--orange)" id="h-watch">—</div>
+    </button>
+    <button class="topbar-stat" onclick="statFilter('stable')" title="點擊查看穩定個案清單">
+      <div class="ts-l">穩定個案</div>
+      <div class="ts-v" style="color:var(--green)" id="h-stable">—</div>
+    </button>
+    <button class="topbar-stat" onclick="statFilter('due')" title="點擊查看已逾期個案清單（隨時間自動更新）">
+      <div class="ts-l">已逾期</div>
+      <div class="ts-v" style="color:var(--red)" id="h-due">—</div>
+    </button>
+    <button class="topbar-stat" onclick="statFilter('closed')" title="點擊查看已結案個案清單">
+      <div class="ts-l">已結案</div>
+      <div class="ts-v" style="color:var(--closed)" id="h-closed">—</div>
+    </button>
+    <button class="topbar-stat" onclick="statFilter('yearVisit')" title="點擊查看本年度有訪視紀錄的個案">
+      <div class="ts-l">年度總量</div>
       <div class="ts-v" id="h-total">—</div>
-    </div>
+    </button>
+    <button class="topbar-stat" onclick="statFilter('yearOpen')" title="點擊查看今年開案的個案">
+      <div class="ts-l">今年開案累積</div>
+      <div class="ts-v" id="h-year">—</div>
+    </button>
     <div class="date-badge" id="today-date">—</div>
   </div>
 </div>
 
-<div class="main">
+<div class="main mv-map" id="main-container">
 
   <!-- LEFT PANEL -->
   <div class="lp">
@@ -293,6 +414,12 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
         <button class="fchip urgent" onclick="setFilter('urgent',this)">● 緊急</button>
         <button class="fchip watch" onclick="setFilter('watch',this)">● 關注</button>
         <button class="fchip stable" onclick="setFilter('stable',this)">● 穩定</button>
+        <button class="fchip closed" onclick="setFilter('closed',this)">● 已結案</button>
+        <button class="fchip reopened" onclick="setFilter('reopened',this)">● 再進案</button>
+      </div>
+      <div class="filter-status-bar" id="filter-status-bar">
+        <span id="filter-status-text"></span>
+        <button onclick="clearAllFilters()">清除</button>
       </div>
       <button class="add-case-btn" onclick="openCaseForm()">＋ 新增個案</button>
     </div>
@@ -332,6 +459,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
 
         <div class="detail-section">
           <div class="detail-sec-title">基本資訊</div>
+          <div class="detail-field"><span class="df-label">個案狀態</span><span class="df-value" id="d-status">—</span></div>
           <div class="detail-field"><span class="df-label">風險等級</span><span class="df-value" id="d-risk">—</span></div>
           <div class="detail-field"><span class="df-label">行政區</span><span class="df-value" id="d-area">—</span></div>
           <div class="detail-field"><span class="df-label">負責社工</span><span class="df-value" id="d-worker">—</span></div>
@@ -343,6 +471,11 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
           <div class="detail-field"><span class="df-label">上次訪視</span><span class="df-value" id="d-last">—</span></div>
           <div class="detail-field"><span class="df-label">建議頻率</span><span class="df-value" id="d-freq">—</span></div>
           <div class="detail-field"><span class="df-label">逾期天數</span><span class="df-value" id="d-overdue">—</span></div>
+        </div>
+
+        <div class="detail-section">
+          <div class="detail-sec-title">相關社福資源</div>
+          <div class="resource-list" id="d-resources"></div>
         </div>
 
         <div class="detail-section">
@@ -364,6 +497,19 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
     </div>
   </div>
 
+</div>
+
+<!-- 手機版底部分頁切換列（桌面版寬螢幕不會顯示） -->
+<div class="mobile-tabbar">
+  <button class="mobile-tab active" data-tab="map" onclick="setMobileView('map', this)">
+    <span class="mt-icon">🗺</span><span>地圖</span>
+  </button>
+  <button class="mobile-tab" data-tab="list" onclick="setMobileView('list', this)">
+    <span class="mt-icon">📋</span><span>個案清單</span>
+  </button>
+  <button class="mobile-tab" data-tab="detail" onclick="setMobileView('detail', this)">
+    <span class="mt-icon">🧑‍💼</span><span>個案詳情</span>
+  </button>
 </div>
 
 <!-- RECORD DETAIL MODAL -->
@@ -478,6 +624,17 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
         <div class="form-field"><label>負責社工</label><input id="cf-worker" placeholder="例如 林社工"></div>
       </div>
       <div class="form-row">
+        <div class="form-field"><label>個案狀態</label>
+          <select id="cf-status"><option value="active">使用中</option><option value="closed">已結案</option></select>
+        </div>
+        <div class="form-field">
+          <label>再進案標記</label>
+          <div class="status-select-row" style="padding-top:7px">
+            <label class="geno-chk"><input type="checkbox" id="cf-reopened"> 本案為再進案（曾結案後重新開案）</label>
+          </div>
+        </div>
+      </div>
+      <div class="form-row">
         <div class="form-field"><label>風險等級</label>
           <select id="cf-risk"><option value="urgent">🔴 緊急</option><option value="watch">🟠 關注</option><option value="stable">🟢 穩定</option></select>
         </div>
@@ -508,6 +665,15 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
         <button class="pick-loc-btn" id="cf-pick-btn" onclick="togglePickLocation()">📍 在地圖上點選</button>
       </div>
       <div style="font-size:10px;color:var(--muted);margin-bottom:4px" id="cf-pick-hint">點擊按鈕後，直接在地圖上點一下即可帶入座標（建議先套用地理模糊化再存正式資料）</div>
+
+      <div class="form-section-title">家系圖</div>
+      <div class="geno-builder-hint">填寫下方成員與關係，儲存時會自動排版產生家系圖（不需要自己算座標）。勾選「同住」的成員，家系圖上會用虛線圈起來。</div>
+
+      <div id="cf-geno-members-list"></div>
+      <button type="button" class="geno-add-btn" onclick="addGenoMember()">＋ 新增家庭成員</button>
+
+      <div id="cf-geno-unions-list"></div>
+      <button type="button" class="geno-add-btn" onclick="addGenoUnion()">＋ 新增關係（婚姻／離婚／同居等）</button>
 
       <div class="form-actions">
         <button class="form-btn secondary" onclick="closeCaseForm()">取消</button>
@@ -1018,7 +1184,182 @@ const SEED_CASES = [
       {date:"2024-12-10",worker:"王社工",risk:"stable",summary:"親職功能恢復良好，子女就學正常。家庭功能評估達關閉標準，擬月底結案。"},
       {date:"2024-10-29",worker:"王社工",risk:"stable",summary:"家庭功能持續改善，經濟狀況穩定，評估準備結案程序。"},
     ]},
+
+  {id:"D-2501",type:"中低收入戶",lat:25.0679,lon:121.5125,area:"大同區",worker:"陳社工",risk:"watch",open:"2024-02-05",lastVisit:"2024-03-01",freqDays:30,
+    gender:"女",age:39,household:"與兩名子女同住",living:"租賃公寓",openReason:"里幹事轉介，家庭經濟陷入困境，已完成中低收入戶資格認定",
+    genogram:null,
+    history:[
+      {date:"2024-03-01",worker:"陳社工",risk:"watch",summary:"完成中低收入戶資格認定，協助申請學雜費減免與健保自付保費補助。"},
+      {date:"2024-02-05",worker:"陳社工",risk:"watch",summary:"首次接案訪視，了解家庭經濟狀況，備齊申請文件協助送件。"},
+    ]},
+
+  {id:"D-2508",type:"急難救助",lat:25.0972,lon:121.5250,area:"士林區",worker:"林社工",risk:"urgent",open:"2024-11-20",lastVisit:"2024-11-20",freqDays:7,
+    gender:"男",age:52,household:"獨居",living:"租賃套房",openReason:"里長通報，案主因意外事故短期無法工作，生活陷入困境",
+    genogram:null,
+    history:[
+      {date:"2024-11-20",worker:"林社工",risk:"urgent",summary:"協助申請急難救助金，並轉介短期生活扶助與醫療資源。"},
+    ]},
+
+  {id:"D-2515",type:"特殊境遇家庭",lat:24.9887,lon:121.5701,area:"文山區",worker:"王社工",risk:"watch",open:"2024-05-15",lastVisit:"2024-06-10",freqDays:21,
+    gender:"女",age:34,household:"與一名子女同住",living:"租賃公寓",openReason:"醫院社工轉介，配偶因故死亡，獨自育有一名子女，經濟與心理均需支持",
+    genogram:null,
+    history:[
+      {date:"2024-06-10",worker:"王社工",risk:"watch",summary:"完成特殊境遇家庭資格認定，協助申請子女教育補助及心理諮商轉介。"},
+      {date:"2024-05-15",worker:"王社工",risk:"watch",summary:"首次訪視，了解案家經濟與情緒狀況，說明可申請之福利項目。"},
+    ]},
+
+  {id:"E-2601",type:"低收入戶",lat:25.0546,lon:121.6066,area:"南港區",worker:"林社工",risk:"watch",open:"2023-08-12",lastVisit:"2024-11-02",freqDays:21,
+    gender:"男",age:80,household:"獨居",living:"自有老舊公寓",openReason:"里幹事轉介，長者列冊低收入戶，需持續關懷生活狀況",
+    genogram:null,
+    history:[
+      {date:"2024-11-02",worker:"林社工",risk:"watch",summary:"生活扶助按期核發，行動能力尚可自理，暫無迫切需求。"},
+      {date:"2024-10-12",worker:"林社工",risk:"watch",summary:"定期訪視，居家環境整潔，關心低收資格複核事宜。"},
+    ]},
+
+  {id:"E-2608",type:"兒童保護",lat:25.0692,lon:121.5877,area:"內湖區",worker:"陳社工",risk:"watch",open:"2024-04-18",lastVisit:"2024-11-15",freqDays:14,
+    gender:"男",age:9,household:"與父母同住",living:"自有公寓",openReason:"學校輔導老師轉介，疑似同儕霸凌併照顧疏忽",
+    genogram:null,
+    history:[
+      {date:"2024-11-15",worker:"陳社工",risk:"watch",summary:"與學校保持聯繫，出席狀況穩定，家長配合親職教育課程。"},
+      {date:"2024-10-30",worker:"陳社工",risk:"watch",summary:"家訪了解親子互動，親職教育課程出席率良好。"},
+    ]},
+
+  {id:"E-2615",type:"身心障礙",lat:25.0558,lon:121.5677,area:"松山區",worker:"王社工",risk:"stable",open:"2022-06-01",lastVisit:"2024-11-20",freqDays:60,
+    gender:"女",age:29,household:"與父母同住",living:"自有公寓",openReason:"醫院社工轉介，領有身心障礙證明，家屬照顧穩定",
+    genogram:null,
+    history:[
+      {date:"2024-11-20",worker:"王社工",risk:"stable",summary:"輔具使用狀況良好，日照服務銜接穩定，家屬照顧負荷可控。"},
+    ]},
+
+  {id:"E-2622",type:"家庭暴力",lat:25.0324,lon:121.5197,area:"中正區",worker:"陳社工",risk:"urgent",open:"2024-10-05",lastVisit:"2024-11-25",freqDays:7,
+    gender:"女",age:31,household:"與一名子女同住",living:"庇護安置中",openReason:"警政通報，遭受親密關係暴力，已申請保護令",
+    genogram:null,
+    history:[
+      {date:"2024-11-25",worker:"陳社工",risk:"urgent",summary:"保護令審理中，案主情緒仍不穩定，持續提供安全計畫與心理支持。"},
+      {date:"2024-11-08",worker:"陳社工",risk:"urgent",summary:"陪同驗傷取證，協助聲請緊急保護令。"},
+    ]},
+
+  {id:"E-2629",type:"精神健康",lat:25.0299,lon:121.4990,area:"萬華區",worker:"林社工",risk:"watch",open:"2023-12-01",lastVisit:"2024-11-18",freqDays:14,
+    gender:"男",age:46,household:"獨居",living:"租賃套房",openReason:"衛生所社區關懷訪視員轉介，規律服藥追蹤中",
+    genogram:null,
+    history:[
+      {date:"2024-11-18",worker:"林社工",risk:"watch",summary:"服藥遵從性良好，情緒穩定，社區關懷訪視員持續陪伴。"},
+    ]},
+
+  {id:"E-2636",type:"低收入戶",lat:25.0210,lon:121.5498,area:"大安區",worker:"王社工",risk:"stable",open:"2022-09-10",lastVisit:"2024-11-10",freqDays:30,
+    gender:"女",age:58,household:"獨居",living:"租賃套房",openReason:"里幹事轉介，長期列冊低收入戶關懷對象",
+    genogram:null,
+    history:[
+      {date:"2024-11-10",worker:"王社工",risk:"stable",summary:"生活扶助按期核發，案主身心狀況穩定，暫無新增需求。"},
+    ]},
+
+  {id:"E-2643",type:"未成年家長",lat:25.0306,lon:121.5697,area:"信義區",worker:"陳社工",risk:"watch",open:"2024-07-22",lastVisit:"2024-11-28",freqDays:14,
+    gender:"女",age:18,household:"與男友同住",living:"租賃套房",openReason:"醫院社工轉介，未成年產婦，育有一名嬰兒",
+    genogram:null,
+    history:[
+      {date:"2024-11-28",worker:"陳社工",risk:"watch",summary:"育兒信心逐漸提升，托育補助申請已核准，持續參與親職教育團體。"},
+      {date:"2024-11-01",worker:"陳社工",risk:"watch",summary:"嬰兒健檢正常，關心案主與男友關係穩定度。"},
+    ]},
+
+  {id:"E-2650",type:"中低收入戶",lat:25.0937,lon:121.5264,area:"士林區",worker:"林社工",risk:"stable",open:"2023-03-15",lastVisit:"2024-11-05",freqDays:30,
+    gender:"男",age:41,household:"與母親同住",living:"母親自有住宅",openReason:"更生保護會轉介，經濟狀況核列中低收入戶，持續關懷",
+    genogram:null,
+    history:[
+      {date:"2024-11-05",worker:"林社工",risk:"stable",summary:"穩定就業超過一年，中低收入戶資格複核通過，家庭經濟逐漸改善。"},
+    ]},
+
+  {id:"E-2657",type:"新住民",lat:25.1315,lon:121.4989,area:"北投區",worker:"王社工",risk:"stable",open:"2023-11-08",lastVisit:"2024-11-12",freqDays:60,
+    gender:"女",age:33,household:"與配偶及一名子女同住",living:"配偶自有住宅",openReason:"移民署轉介，新住民生活適應關懷",
+    genogram:null,
+    history:[
+      {date:"2024-11-12",worker:"王社工",risk:"stable",summary:"中文能力進步，已取得工作許可，家庭關係穩定。"},
+    ]},
+
+  {id:"E-2664",type:"急難救助",lat:25.0691,lon:121.5325,area:"中山區",worker:"陳社工",risk:"watch",open:"2024-06-20",lastVisit:"2024-11-22",freqDays:14,
+    gender:"男",age:35,household:"與家人同住",living:"家人自有住宅",openReason:"因故短期無法工作，家庭收入中斷，申請急難救助金",
+    genogram:null,
+    history:[
+      {date:"2024-11-22",worker:"陳社工",risk:"watch",summary:"急難救助金已核發，家庭生活穩定，持續追蹤後續就業狀況。"},
+      {date:"2024-11-01",worker:"陳社工",risk:"watch",summary:"家屬反映家庭經濟壓力略有緩解，持續關懷。"},
+    ]},
+
+  {id:"E-2671",type:"特殊境遇家庭",lat:24.9990,lon:121.5602,area:"文山區",worker:"林社工",risk:"watch",open:"2024-05-08",lastVisit:"2024-11-27",freqDays:14,
+    gender:"女",age:16,household:"與母親同住",living:"租賃公寓",openReason:"學校輔導室轉介，單親家庭經核列特殊境遇家庭，子女就學狀況待關注",
+    genogram:null,
+    history:[
+      {date:"2024-11-27",worker:"林社工",risk:"watch",summary:"出席狀況改善，特殊境遇家庭子女教育補助已核准，持續與學校保持聯繫。"},
+      {date:"2024-11-10",worker:"林社工",risk:"watch",summary:"家訪了解母女互動狀況，關心家庭經濟與情緒支持。"},
+    ]},
+
+  {id:"E-2678",type:"中低收入戶",lat:25.0700,lon:121.5080,area:"大同區",worker:"王社工",risk:"stable",open:"2023-05-20",lastVisit:"2024-11-06",freqDays:45,
+    gender:"女",age:45,household:"與配偶及三名子女同住",living:"自有公寓",openReason:"社福中心定期關懷，家庭經濟核列中低收入戶，持續追蹤",
+    genogram:null,
+    history:[
+      {date:"2024-11-06",worker:"王社工",risk:"stable",summary:"家庭功能持續改善，子女學雜費減免申請已核准，經濟狀況穩定。"},
+    ]},
 ];
+
+// 補上個案狀態欄位的預設值（既有示範資料未包含這兩個新欄位）
+SEED_CASES.forEach(c => {
+  if(c.status === undefined) c.status = 'active';
+  if(c.reopened === undefined) c.reopened = false;
+});
+// 示範：標記已結案／再進案個案，方便查看篩選與地圖標記效果
+{
+  const CLOSED_IDS = ['C-2241', 'C-2205', 'C-2218', 'C-2226', 'E-2657'];
+  CLOSED_IDS.forEach(id => {
+    const c = SEED_CASES.find(x => x.id === id);
+    if(c) c.status = 'closed';
+  });
+  const REOPENED_IDS = ['B-2324', 'B-2309', 'E-2622'];
+  REOPENED_IDS.forEach(id => {
+    const c = SEED_CASES.find(x => x.id === id);
+    if(c) c.reopened = true;
+  });
+}
+
+// ═══════════════════════════════
+// 示範資料日期正規化：讓大部分個案的「上次訪視」落在建議頻率內（不逾期），
+// 只保留少數幾筆刻意逾期，示範逾期提示功能。日期會整批平移，
+// 保留原本資料裡「開案→歷次訪視」的前後順序與間隔天數，不會打亂敘事內容。
+// ═══════════════════════════════
+(function normalizeDemoDates(){
+  function addDays(dateStr, days){
+    const d = new Date(dateStr+'T00:00:00');
+    d.setDate(d.getDate() + days);
+    return d.toISOString().slice(0,10);
+  }
+  function daysBetween(fromStr, toStr){
+    return Math.round((new Date(toStr+'T00:00:00') - new Date(fromStr+'T00:00:00')) / (1000*60*60*24));
+  }
+  const todayStr = new Date().toISOString().slice(0,10);
+
+  // 刻意保留「逾期」示範情境的案號：距今天數 = 建議頻率 + 這裡指定的超出天數
+  const OVERDUE_OVERRIDE_EXTRA_DAYS = {
+    'A-2401': 8,   // 獨居老人，freqDays=14 → 逾期約8天，凸顯緊急案件仍逾期未訪的情境
+    'A-2422': 5,   // 藥物濫用，freqDays=7 → 逾期約5天
+  };
+
+  SEED_CASES.forEach(c => {
+    if(!c.history || !c.history.length) return;
+    const oldLastVisit = c.history[0].date; // 資料設計上 history[0] 一律是最新一筆
+
+    let targetDaysAgo;
+    if(OVERDUE_OVERRIDE_EXTRA_DAYS[c.id] !== undefined){
+      targetDaysAgo = c.freqDays + OVERDUE_OVERRIDE_EXTRA_DAYS[c.id];
+    } else {
+      // 落在建議頻率的 35%～55% 之間，確保不會逾期，且看起來像「還在追蹤中」
+      targetDaysAgo = Math.max(1, Math.round(c.freqDays * 0.45));
+    }
+
+    const newLastVisit = addDays(todayStr, -targetDaysAgo);
+    const delta = daysBetween(oldLastVisit, newLastVisit);
+
+    c.open = addDays(c.open, delta);
+    c.lastVisit = newLastVisit;
+    c.history.forEach(h => { h.date = addDays(h.date, delta); });
+  });
+})();
 
 // ═══════════════════════════════
 // 資料持久化（localStorage）
@@ -1030,7 +1371,13 @@ function loadCases(){
     const raw = localStorage.getItem(STORAGE_KEY);
     if(raw){
       const parsed = JSON.parse(raw);
-      if(Array.isArray(parsed) && parsed.length>0) return parsed;
+      if(Array.isArray(parsed) && parsed.length>0){
+        parsed.forEach(c => {
+          if(c.status === undefined) c.status = 'active';
+          if(c.reopened === undefined) c.reopened = false;
+        });
+        return parsed;
+      }
     }
   }catch(e){ console.warn('讀取本機資料失敗，改用預設示範資料', e); }
   return JSON.parse(JSON.stringify(SEED_CASES));
@@ -1054,6 +1401,7 @@ let CASES = loadCases();
 
 let selected = new Set();
 let activeFilter = 'all';
+let activeWorker = 'all';
 let activeCaseId = null;
 let currentRecordCaseId = null;
 let currentRecordIdx = null;
@@ -1061,6 +1409,9 @@ let caseFormEditId = null;
 let visitFormCaseId = null;
 let visitFormIdx = null;
 let pickingLocation = false;
+let cfGenoMembers = [];
+let cfGenoUnions = [];
+let cfGenoIdCounter = 0;
 const markers = {};
 
 // ═══════════════════════════════
@@ -1071,10 +1422,29 @@ const map = L.map('map',{center:[25.044,121.535],zoom:13,zoomControl:false,attri
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map);
 L.control.zoom({position:'bottomright'}).addTo(map);
 
+// 機構位置（社工上班地點 / 路線規劃出發站）
+const INSTITUTION = {
+  name: "信義區社福中心",
+  lat: 25.0330,
+  lon: 121.5654,
+};
+
+const institutionIcon = L.divIcon({
+  html:`<div style="width:24px;height:24px;border-radius:6px;background:#1e293b;border:2.5px solid white;box-shadow:0 2px 6px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;font-size:12px;">🏢</div>`,
+  iconSize:[24,24], iconAnchor:[12,12], className:''
+});
+const institutionMarker = L.marker([INSTITUTION.lat, INSTITUTION.lon], {icon: institutionIcon, zIndexOffset: 1000});
+institutionMarker.bindTooltip(
+  `<div style="font-family:'Noto Sans TC',sans-serif;font-size:12px;"><strong>${INSTITUTION.name}</strong><br><span style="color:#64748b;font-size:10px;">社工上班地點 · 路線規劃出發站</span></div>`,
+  {direction:'top', offset:[0,-12]}
+);
+institutionMarker.addTo(map);
+
 const legend = L.control({position:'bottomleft'});
 legend.onAdd = () => {
   const d = L.DomUtil.create('div','map-legend');
   d.innerHTML = `
+    <div class="legend-row"><div class="legend-dot" style="background:#1e293b;border-radius:3px"></div> 機構（出發站）</div>
     <div class="legend-row"><div class="legend-dot" style="background:#ef4444"></div> 緊急</div>
     <div class="legend-row"><div class="legend-dot" style="background:#f97316"></div> 關注</div>
     <div class="legend-row"><div class="legend-dot" style="background:#16a34a"></div> 穩定</div>`;
@@ -1084,6 +1454,17 @@ legend.addTo(map);
 
 function riskColor(r){ return r==='urgent'?'#ef4444':r==='watch'?'#f97316':'#16a34a'; }
 function riskLabel(r){ return r==='urgent'?'🔴 緊急':r==='watch'?'🟠 關注':'🟢 穩定'; }
+const CLOSED_COLOR = '#6b7280';
+const REOPEN_COLOR = '#0ea5e9';
+function markerBackground(c){
+  if(c.status==='closed') return CLOSED_COLOR;
+  if(c.reopened) return `linear-gradient(90deg, ${riskColor(c.risk)} 50%, ${REOPEN_COLOR} 50%)`;
+  return riskColor(c.risk);
+}
+function statusLabel(c){
+  if(c.status==='closed') return '⚪ 已結案';
+  return riskLabel(c.risk);
+}
 
 function daysAgo(dateStr){
   const d = new Date(dateStr);
@@ -1092,13 +1473,118 @@ function daysAgo(dateStr){
 }
 function isOverdue(c){ return daysAgo(c.lastVisit) > c.freqDays; }
 
+// ═══════════════════════════════
+// 社福資源清單（全國性 + 臺北市社會局，資料來源：衛福部/臺北市社會局/臺北市就業服務處官網）
+// ═══════════════════════════════
+const NATIONAL_RESOURCES = [
+  {name:'113保護專線', desc:'家暴／性侵／兒少保護通報，24小時', number:'113'},
+  {name:'1957福利諮詢專線', desc:'社福諮詢與通報轉介，每日08:00–22:00', number:'1957'},
+  {name:'1966長照專線', desc:'長期照顧服務諮詢', number:'1966'},
+];
+// 臺北市社會局代表號 1999，依業務轉分機（來源：臺北市社會局官網）
+const TYPE_RESOURCES = {
+  '獨居老人':      [{name:'臺北市社會局．老人福利科',        number:'1999', ext:'6966'}],
+  '兒童保護':      [{name:'臺北市社會局．兒少福利科',        number:'1999', ext:'6972'}],
+  '身心障礙':      [{name:'臺北市社會局．身心障礙福利科',    number:'1999', ext:'1358'}],
+  '家庭暴力':      [{name:'113保護專線（優先通報）',         number:'113'}],
+  '低收入戶':      [{name:'臺北市社會局．社會救助科',        number:'1999', ext:'1609'}],
+  '中低收入戶':    [{name:'臺北市社會局．社會救助科',        number:'1999', ext:'1609'}],
+  '急難救助':      [{name:'臺北市社會局．社會救助科',        number:'1999', ext:'1609'}],
+  '特殊境遇家庭':  [{name:'臺北市社會局．婦女福利及兒童托育科', number:'1999', ext:'1622'}],
+  '未成年家長':    [{name:'臺北市社會局．婦女福利及兒童托育科', number:'1999', ext:'1622'}],
+  '青少年輔導':    [{name:'臺北市社會局．兒少福利科',        number:'1999', ext:'6972'}],
+  '家庭支持':      [{name:'臺北市社會局．社會工作科',        number:'1999', ext:'1633'}],
+  '更生人':        [{name:'臺北市就業服務處',                number:'0223085231'}],
+};
+
+// 各項福利補助／服務項目（不只是電話專線）。金額與資格門檻每年會調整，
+// 這裡刻意不列出具體金額，只標示項目名稱與主責單位，正確金額請以官網公告為準。
+const WELFARE_PROGRAMS = {
+  '低收入戶':      [
+    {name:'低收入戶生活扶助（含年節慰問金）', agency:'臺北市社會局．社會救助科', link:'https://dosw.gov.taipei/cp.aspx?n=E6D700BD37E78592'},
+    {name:'低收入戶市民醫療補助',             agency:'臺北市社會局．社會救助科', link:'https://dosw.gov.taipei/cp.aspx?n=D8645B7D5413343D'},
+  ],
+  '中低收入戶':    [
+    {name:'中低收入戶學雜費減免／健保補助',   agency:'臺北市社會局．社會救助科', link:'https://dosw.gov.taipei/cp.aspx?n=B75CE261826F1C11'},
+  ],
+  '急難救助':      [
+    {name:'急難救助金',                       agency:'臺北市社會局．社會救助科', link:'https://dosw.gov.taipei/cp.aspx?n=0BF751F1B9F07AA1'},
+    {name:'強化社會安全網急難紓困方案',       agency:'臺北市社會局．社會救助科', link:'https://dosw.gov.taipei/cp.aspx?n=7011FE50261D43B5'},
+  ],
+  '特殊境遇家庭':  [
+    {name:'特殊境遇家庭扶助',                 agency:'臺北市社會局．婦女福利及兒童托育科', link:'https://dosw.gov.taipei/News_Content.aspx?n=A6D1377856550DDE&sms=7FA2EB00D0E75B18&s=AE799374A983BFB8'},
+  ],
+  '未成年家長':    [
+    {name:'育兒津貼',                         agency:'臺北市社會局．婦女福利及兒童托育科', link:'https://dosw.gov.taipei/Content_List.aspx?n=688E06787F226198'},
+    {name:'育兒及托育相關補助（總覽）',       agency:'臺北市社會局．婦女福利及兒童托育科', link:'https://dosw.gov.taipei/Content_List.aspx?n=2C486AA08208CD74'},
+  ],
+  '家庭支持':      [
+    {name:'育兒及托育相關補助（總覽）',       agency:'臺北市社會局．婦女福利及兒童托育科', link:'https://dosw.gov.taipei/Content_List.aspx?n=2C486AA08208CD74'},
+  ],
+  '獨居老人':      [
+    {name:'中低收入老人生活津貼',             agency:'臺北市社會局．老人福利科', link:'https://dosw.gov.taipei/cp.aspx?n=FCF3DAE98DDA289F'},
+  ],
+  '身心障礙':      [
+    {name:'身心障礙者生活補助',               agency:'臺北市社會局．身心障礙福利科', link:'https://dosw.gov.taipei/cp.aspx?n=1BBD3CDD6206A2DC'},
+    {name:'身心障礙福利服務（總覽）',         agency:'臺北市社會局．身心障礙福利科', link:'https://dosw.gov.taipei/'},
+  ],
+  '更生人':        [
+    {name:'就業保險失業給付',                 agency:'臺北市就業服務處', link:'https://eso.gov.taipei/News_Content.aspx?n=DF02DE8E0A136367&s=551D6E9A030C09AD'},
+    {name:'就業促進津貼／職業訓練媒合',       agency:'臺北市就業服務處', link:'https://eso.gov.taipei/'},
+  ],
+};
+
+
+function telHref(r){ return r.ext ? `tel:${r.number},,${r.ext}` : `tel:${r.number}`; }
+function telLabel(r){ return r.ext ? `${r.number} 轉 ${r.ext}` : r.number; }
+function getResourcesForCase(c){
+  return {
+    programs: WELFARE_PROGRAMS[c.type] || [],
+    specific: TYPE_RESOURCES[c.type] || [],
+    national: NATIONAL_RESOURCES,
+  };
+}
+
+function buildHistTooltip(c){
+  const recent = c.history.slice(0,3);
+  const rows = recent.map(h => `
+    <div class="hist-row">
+      <div class="hist-dot" style="background:${riskColor(h.risk)}"></div>
+      <div class="hist-body">
+        <div class="hist-date">${h.date} · ${h.worker}</div>
+        <div class="hist-summary">${h.summary}</div>
+      </div>
+    </div>`).join('');
+  const more = c.history.length > 3
+    ? `<div class="hist-more">還有 ${c.history.length-3} 筆紀錄 · 點擊查看完整時間軸</div>`
+    : `<div class="hist-more">點擊標記查看完整資訊</div>`;
+  const res = getResourcesForCase(c);
+  const resItems = [...res.specific, ...res.national.slice(0,1)];
+  const programHtml = res.programs.length ? `
+    <div class="hist-res-title">相關福利項目</div>
+    ${res.programs.slice(0,2).map(p => `<div class="hist-res-item"><a href="${p.link || 'https://dosw.gov.taipei/'}" target="_blank" rel="noopener">${p.name} ↗</a></div>`).join('')}
+  ` : '';
+  const resHtml = resItems.length ? `
+    <div class="hist-res-title">聯絡窗口</div>
+    ${resItems.map(r => `<div class="hist-res-item">${r.name}：<a href="${telHref(r)}">${telLabel(r)}</a></div>`).join('')}
+  ` : '';
+  const statusTag = c.status==='closed' ? '（已結案）' : c.reopened ? '（再進案）' : '';
+  return `<div class="hist-tip">
+    <div class="hist-tip-head"><span class="hist-tip-id">${c.id}${statusTag}</span><span class="hist-tip-type">${c.type} · ${c.area}</span></div>
+    ${rows}
+    ${more}
+    ${programHtml}
+    ${resHtml}
+  </div>`;
+}
+
 function rebuildMarkers(){
   Object.values(markers).forEach(m => map.removeLayer(m));
   for(const k in markers) delete markers[k];
   CASES.forEach(c => {
-    const col = riskColor(c.risk);
+    const bg = markerBackground(c);
     const icon = L.divIcon({
-      html:`<div style="width:18px;height:18px;border-radius:50%;background:${col};border:2.5px solid white;box-shadow:0 2px 6px rgba(0,0,0,.25);transition:transform .15s;"></div>`,
+      html:`<div style="width:18px;height:18px;border-radius:50%;background:${bg};border:2.5px solid white;box-shadow:0 2px 6px rgba(0,0,0,.25);transition:transform .15s;"></div>`,
       iconSize:[18,18], iconAnchor:[9,9], className:''
     });
     const m = L.marker([c.lat,c.lon],{icon});
@@ -1110,9 +1596,23 @@ function rebuildMarkers(){
 }
 rebuildMarkers();
 
+// 讓地圖標記跟左側清單的篩選結果保持一致：篩選後不符合條件的個案，地圖上的點也會跟著消失
+function syncMarkerVisibility(filteredCases){
+  const visibleIds = new Set(filteredCases.map(c => c.id));
+  CASES.forEach(c => {
+    const m = markers[c.id];
+    if(!m) return;
+    const shouldShow = visibleIds.has(c.id);
+    const isShowing = map.hasLayer(m);
+    if(shouldShow && !isShowing) m.addTo(map);
+    else if(!shouldShow && isShowing) map.removeLayer(m);
+  });
+}
+
 function refreshAll(){
   saveCases();
   rebuildMarkers();
+  populateWorkerFilter();
   renderList();
   initStats();
   if(activeCaseId && CASES.find(c=>c.id===activeCaseId)){
@@ -1133,51 +1633,72 @@ function showToast(msg){
   toastTimer = setTimeout(()=>t.classList.remove('show'), 2400);
 }
 
-function buildHistTooltip(c){
-  const recent = c.history.slice(0,3);
-  const rows = recent.map(h => `
-    <div class="hist-row">
-      <div class="hist-dot" style="background:${riskColor(h.risk)}"></div>
-      <div class="hist-body">
-        <div class="hist-date">${h.date} · ${h.worker}</div>
-        <div class="hist-summary">${h.summary}</div>
-      </div>
-    </div>`).join('');
-  const more = c.history.length > 3
-    ? `<div class="hist-more">還有 ${c.history.length-3} 筆紀錄 · 點擊查看完整時間軸</div>`
-    : `<div class="hist-more">點擊標記查看完整資訊</div>`;
-  return `<div class="hist-tip">
-    <div class="hist-tip-head"><span class="hist-tip-id">${c.id}</span><span class="hist-tip-type">${c.type} · ${c.area}</span></div>
-    ${rows}
-    ${more}
-  </div>`;
-}
-
 // ═══════════════════════════════
 // CASE LIST
 // ═══════════════════════════════
+
+function matchesActiveFilter(c){
+  switch(activeFilter){
+    case 'all': return true;
+    case 'urgent': case 'watch': case 'stable':
+      return c.status==='active' && c.risk===activeFilter;
+    case 'closed': return c.status==='closed';
+    case 'reopened': return c.reopened===true;
+    case 'due': return c.status==='active' && isOverdue(c);
+    case 'yearVisit': {
+      const d = new Date(c.lastVisit), now = new Date();
+      return d.getFullYear()===now.getFullYear();
+    }
+    case 'yearOpen': {
+      const d = new Date(c.open), now = new Date();
+      return d.getFullYear()===now.getFullYear();
+    }
+    default: return true;
+  }
+}
+
+const FILTER_STATUS_LABEL = {
+  due: '待訪視（已逾期）個案',
+  yearVisit: '本年度有訪視紀錄的個案（年度總量）',
+  yearOpen: '今年開案的個案（開案累積）',
+};
 
 function renderList(){
   const q = document.getElementById('search').value.toLowerCase();
   const list = document.getElementById('case-list');
   const filtered = CASES.filter(c => {
-    const matchFilter = activeFilter==='all' || c.risk===activeFilter;
     const matchSearch = !q || c.id.toLowerCase().includes(q) || c.type.includes(q) || c.area.includes(q);
-    return matchFilter && matchSearch;
+    const matchWorker = activeWorker==='all' || c.worker===activeWorker;
+    return matchesActiveFilter(c) && matchSearch && matchWorker;
   });
+  syncMarkerVisibility(filtered);
+
+  const bar = document.getElementById('filter-status-bar');
+  const specialLabel = FILTER_STATUS_LABEL[activeFilter];
+  const workerLabel = activeWorker!=='all' ? `${activeWorker}的個案` : '';
+  if(specialLabel || workerLabel){
+    bar.style.display = 'flex';
+    const parts = [specialLabel, workerLabel].filter(Boolean).join('、');
+    document.getElementById('filter-status-text').textContent = `目前顯示：${parts}（共 ${filtered.length} 筆）`;
+  } else {
+    bar.style.display = 'none';
+  }
 
   list.innerHTML = filtered.map(c => {
     const overdue = isOverdue(c);
     const days = daysAgo(c.lastVisit);
     const isSelected = selected.has(c.id);
-    return `<div class="case-item ${c.risk} ${activeCaseId===c.id?'selected':''}" onclick="showCase('${c.id}')">
+    const rowClass = c.status==='closed' ? 'closed' : c.risk;
+    const badgeClass = c.status==='closed' ? 'risk-closed' : `risk-${c.risk}`;
+    const reopenTag = c.reopened ? `<span class="reopen-badge">🔁 再進案</span>` : '';
+    return `<div class="case-item ${rowClass} ${activeCaseId===c.id?'selected':''}" onclick="showCase('${c.id}')">
       <div class="case-cb ${isSelected?'checked':''}" onclick="event.stopPropagation();toggleSelect('${c.id}')"></div>
       <div class="case-info">
         <div class="case-id">${c.id}</div>
         <div class="case-type">${c.type} · ${c.area}</div>
         <div class="case-meta">
-          <span class="risk-badge risk-${c.risk}">${riskLabel(c.risk)}</span>
-          <span class="last-visit ${overdue?'overdue':''}">${overdue?'⚠ 已逾期 '+days+'天':'上訪 '+days+'天前'}</span>
+          <span class="risk-badge ${badgeClass}">${statusLabel(c)}</span>${reopenTag}
+          <span class="last-visit ${overdue?'overdue':''}">${c.status==='closed' ? '' : (overdue?'⚠ 已逾期 '+days+'天':'上訪 '+days+'天前')}</span>
         </div>
       </div>
     </div>`;
@@ -1187,10 +1708,19 @@ function renderList(){
 function setFilter(f, btn){
   activeFilter = f;
   document.querySelectorAll('.fchip').forEach(b => b.classList.remove('act'));
-  btn.classList.add('act');
+  if(btn) btn.classList.add('act');
   renderList();
 }
 function filterList(){ renderList(); }
+
+function statFilter(kind){
+  activeFilter = kind;
+  document.querySelectorAll('.fchip').forEach(b => b.classList.remove('act'));
+  const chipSelector = {urgent:'.fchip.urgent', watch:'.fchip.watch', stable:'.fchip.stable', closed:'.fchip.closed', reopened:'.fchip.reopened'}[kind];
+  if(chipSelector){ const el = document.querySelector(chipSelector); if(el) el.classList.add('act'); }
+  renderList();
+  if(window.innerWidth <= 860){ setMobileView('list'); }
+}
 
 // ═══════════════════════════════
 // CASE DETAIL (RIGHT PANEL)
@@ -1204,21 +1734,50 @@ function showCase(id){
   document.getElementById('ep').style.display='none';
   document.getElementById('dc').classList.add('show');
 
-  const col = riskColor(c.risk);
+  const col = c.status==='closed' ? CLOSED_COLOR : riskColor(c.risk);
   const days = daysAgo(c.lastVisit);
   const overdue = isOverdue(c);
 
   document.getElementById('d-id').textContent = c.id;
   document.getElementById('d-type').textContent = c.type;
-  document.getElementById('d-risk').innerHTML = `<span style="color:${col};font-weight:600">${riskLabel(c.risk)}</span>`;
+  const statusHtml = c.status==='closed'
+    ? `<span style="color:${CLOSED_COLOR};font-weight:600">⚪ 已結案</span>`
+    : `<span style="color:var(--green);font-weight:600">🟢 使用中</span>` + (c.reopened ? ` <span class="reopen-badge">🔁 再進案</span>` : '');
+  document.getElementById('d-status').innerHTML = statusHtml;
+  document.getElementById('d-risk').innerHTML = `<span style="color:${col};font-weight:600">${statusLabel(c)}</span>`;
   document.getElementById('d-area').textContent = c.area;
   document.getElementById('d-worker').textContent = c.worker;
   document.getElementById('d-open').textContent = c.open;
   document.getElementById('d-last').innerHTML = `<span class="${overdue?'overdue':''}">${c.lastVisit}（${days}天前）</span>`;
   document.getElementById('d-freq').textContent = `每 ${c.freqDays} 天`;
-  document.getElementById('d-overdue').innerHTML = overdue
-    ? `<span style="color:var(--red);font-weight:600">逾期 ${days-c.freqDays} 天</span>`
-    : `<span style="color:var(--green)">正常</span>`;
+  document.getElementById('d-overdue').innerHTML = c.status==='closed'
+    ? `<span style="color:var(--muted)">已結案</span>`
+    : overdue
+      ? `<span style="color:var(--red);font-weight:600">逾期 ${days-c.freqDays} 天</span>`
+      : `<span style="color:var(--green)">正常</span>`;
+
+  const res = getResourcesForCase(c);
+  const allHotlines = [...res.specific, ...res.national];
+  const programsHtml = res.programs.length ? `
+    <div class="resource-subtitle">相關補助／福利項目（點擊查看官方說明）</div>
+    ${res.programs.map(p => `
+      <div class="program-item">
+        <a class="program-name" href="${p.link || 'https://dosw.gov.taipei/'}" target="_blank" rel="noopener">${p.name} ↗</a>
+        <div class="program-agency">主責單位：${p.agency}（資格與金額請洽詢，逐年會調整）</div>
+      </div>`).join('')}
+  ` : '';
+  const hotlinesHtml = `
+    <div class="resource-subtitle">聯絡窗口</div>
+    ${allHotlines.map(r => `
+      <div class="resource-item">
+        <div>
+          <div class="resource-name">${r.name}</div>
+          ${r.desc ? `<div class="resource-desc">${r.desc}</div>` : ''}
+        </div>
+        <a class="resource-tel" href="${telHref(r)}">${telLabel(r)}</a>
+      </div>`).join('')}
+  `;
+  document.getElementById('d-resources').innerHTML = programsHtml + hotlinesHtml;
 
   timelineExpanded = false;
   renderTimeline(c);
@@ -1228,6 +1787,24 @@ function showCase(id){
 
   map.flyTo([c.lat, c.lon], 15, {duration:0.8});
   renderList();
+
+  if(window.innerWidth <= 860){ setMobileView('detail'); }
+}
+
+// ═══════════════════════════════
+// 手機版：底部分頁切換
+// ═══════════════════════════════
+function setMobileView(view, btnEl){
+  const main = document.getElementById('main-container');
+  if(!main) return;
+  main.classList.remove('mv-map','mv-list','mv-detail');
+  main.classList.add('mv-'+view);
+  document.querySelectorAll('.mobile-tab').forEach(b=>b.classList.remove('active'));
+  const target = btnEl || document.querySelector(`.mobile-tab[data-tab="${view}"]`);
+  if(target) target.classList.add('active');
+  if(view === 'map'){
+    setTimeout(() => { if(typeof map !== 'undefined') map.invalidateSize(); }, 80);
+  }
 }
 
 // ═══════════════════════════════
@@ -1270,16 +1847,28 @@ function toggleTimeline(){
 // ═══════════════════════════════
 
 function renderGenogram(g){
-  const COLW=92, ROWH=104, SYM=32, PAD=36;
+  const COLW=92, ROWH=104, SYM=32, PAD=44;
   const maxX = Math.max(...g.members.map(m=>m.x));
   const maxY = Math.max(...g.members.map(m=>m.y));
   const width = PAD*2 + (maxX+1)*COLW;
-  const height = 28 + (maxY+1)*ROWH + 30;
+  const height = 40 + (maxY+1)*ROWH + 40;
   const byId = id => g.members.find(m=>m.id===id);
   const cx = m => PAD + m.x*COLW + COLW/2;
-  const cy = m => 26 + m.y*ROWH + ROWH/2;
+  const cy = m => 38 + m.y*ROWH + ROWH/2;
 
-  let lines = '', symbols = '';
+  let lines = '', symbols = '', householdCircle = '';
+
+  const householdMembers = g.members.filter(m=>m.sameHousehold);
+  if(householdMembers.length > 0){
+    const xs = householdMembers.map(cx), ys = householdMembers.map(cy);
+    const minX = Math.max(6, Math.min(...xs) - SYM/2 - 16);
+    const maxXv = Math.min(width-6, Math.max(...xs) + SYM/2 + 16);
+    const minY = Math.max(18, Math.min(...ys) - SYM/2 - 26);
+    const maxYv = Math.min(height-6, Math.max(...ys) + SYM/2 + 30);
+    const ecx = (minX+maxXv)/2, ecy = (minY+maxYv)/2, erx = (maxXv-minX)/2, ery = (maxYv-minY)/2;
+    householdCircle = `<ellipse cx="${ecx}" cy="${ecy}" rx="${erx}" ry="${ery}" fill="rgba(148,163,184,0.08)" stroke="#94a3b8" stroke-width="2" stroke-dasharray="6 5"/>
+      <text x="${ecx}" y="${minY-6}" text-anchor="middle" font-size="9.5" fill="#64748b" font-weight="700">同住</text>`;
+  }
 
   g.unions.forEach(u=>{
     const A = byId(u.a);
@@ -1335,18 +1924,18 @@ function renderGenogram(g){
       symbols += `<text x="${x}" y="${y-SYM/2-7}" text-anchor="middle" font-size="8.5" fill="#2563eb" font-weight="700">本案當事人</text>`;
     }
     let ly = y + SYM/2 + 15;
-    symbols += `<text x="${x}" y="${ly}" text-anchor="middle" font-size="11" font-weight="600" fill="#1e293b">${m.name}</text>`;
+    symbols += `<text x="${x}" y="${ly}" text-anchor="middle" font-size="11" font-weight="600" fill="#1e293b">${escHtml(m.name)}</text>`;
     ly += 13;
     if(m.age){
       symbols += `<text x="${x}" y="${ly}" text-anchor="middle" font-size="9.5" fill="#64748b">${m.age}歲</text>`;
       ly += 12;
     }
     if(m.note){
-      symbols += `<text x="${x}" y="${ly}" text-anchor="middle" font-size="8.5" fill="#94a3b8">${m.note}</text>`;
+      symbols += `<text x="${x}" y="${ly}" text-anchor="middle" font-size="8.5" fill="#94a3b8">${escHtml(m.note)}</text>`;
     }
   });
 
-  return `<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;max-height:280px;display:block;">${lines}${symbols}</svg>`;
+  return `<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;max-height:300px;display:block;">${householdCircle}${lines}${symbols}</svg>`;
 }
 
 // ═══════════════════════════════
@@ -1360,6 +1949,9 @@ const SERVICE_MAP = {
   "家庭暴力":["保護令進度確認","安全計畫檢視","心理諮商轉介","庇護資源說明","加害人動向了解"],
   "精神健康":["服藥遵從性評估","精神科回診協調","情緒狀態評估","社區關懷連結","家屬支持資源說明"],
   "低收入戶":["急難救助申請","就學費用協助","福利資源連結","收入狀況確認","就業媒合轉介"],
+  "中低收入戶":["學雜費減免申請","健保自付保費補助申請","福利資源連結","收入狀況確認","就業媒合轉介"],
+  "急難救助":["急難救助金申請","短期生活扶助","醫療資源轉介","收入狀況確認","後續福利資源銜接"],
+  "特殊境遇家庭":["特殊境遇家庭資格認定","子女教育補助申請","心理諮商轉介","經濟狀況確認","福利資源連結"],
   "未成年家長":["育兒技巧指導","托育補助申請","親職教育轉介","嬰幼兒健檢確認","心理支持服務"],
   "更生人":["就業狀況確認","回診配合度評估","社區適應了解","家庭關係了解","法定義務說明"],
   "新住民":["語言學習資源","就業許可協助","家庭關係了解","社區適應評估","福利資訊提供"],
@@ -1394,6 +1986,9 @@ const TYPE_DIMS = {
   "家庭暴力":{bio:"身體傷勢復原狀況為觀察重點",psycho:"創傷反應及情緒復原為核心議題",social:"安全網絡及親屬支持為重要資源",eco:"經濟自主能力為後續安全規劃關鍵"},
   "精神健康":{bio:"服藥遵從性及生理狀況為觀察重點",psycho:"情緒及精神症狀穩定度為核心",social:"社區關懷及家屬支持為重要資源",eco:"經濟狀況尚可，無急迫議題"},
   "低收入戶":{bio:"基本生理需求滿足狀況為觀察重點",psycho:"經濟壓力下之情緒狀態需留意",social:"親屬及社區支持資源為輔助",eco:"家庭經濟狀況為核心議題"},
+  "中低收入戶":{bio:"基本生理需求尚可維持",psycho:"經濟壓力下之情緒狀態需留意",social:"親屬及社區支持資源為輔助",eco:"家庭經濟狀況接近門檻，需持續追蹤"},
+  "急難救助":{bio:"因急難事件致生理需求短期受影響",psycho:"面對突發困境之情緒狀態需留意",social:"親屬及社區支持為短期重要資源",eco:"短期經濟中斷為核心議題"},
+  "特殊境遇家庭":{bio:"生理健康狀況尚可",psycho:"面對境遇變化之情緒調適為核心議題",social:"原生家庭及社區支持為重要資源",eco:"單一經濟來源，需持續關注家庭經濟"},
   "未成年家長":{bio:"育兒照顧能力及自身健康為觀察重點",psycho:"角色適應及情緒支持為核心議題",social:"原生家庭及伴侶支持為重要資源",eco:"經濟自立能力為長期關注議題"},
   "更生人":{bio:"生理健康狀況穩定",psycho:"自我效能及社會適應為觀察重點",social:"就業及人際關係為重要資源",eco:"穩定就業為經濟自立關鍵"},
   "新住民":{bio:"生理健康狀況穩定",psycho:"文化適應及情緒狀態為觀察重點",social:"配偶家庭及社區支持為重要資源",eco:"就業狀況為經濟自主關鍵"},
@@ -1485,6 +2080,7 @@ function openRecordDetail(caseId, idx){
         <div class="gl-item"><span class="gl-line dashed"></span>同居伴侶</div>
         <div class="gl-item"><svg width="18" height="16"><line x1="3" y1="3" x2="13" y2="13" stroke="#475569" stroke-width="2"/></svg>分居／離異</div>
         <div class="gl-item"><span class="gl-box-blue"></span>本案當事人</div>
+        <div class="gl-item"><svg width="20" height="14"><ellipse cx="10" cy="7" rx="9" ry="6" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="3 3"/></svg>同住圈</div>
       </div>`;
   } else {
     genoEl.innerHTML = `<div class="geno-empty">📋 本案家系圖尚待建立<br><span style="font-size:10px;color:#94a3b8">（示範資料未涵蓋此案，正式系統應由社工依訪視內容建檔）</span></div>`;
@@ -1531,6 +2127,208 @@ function closeRecordDetail(){
 // CASE CRUD（新增／編輯／刪除個案）
 // ═══════════════════════════════
 
+// ═══════════════════════════════
+// 家系圖建構工具（填表單自動排版，不需手動輸入座標）
+// ═══════════════════════════════
+
+function escHtml(s){
+  return String(s ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
+
+function updateGenoMemberField(id, field, value){
+  const m = cfGenoMembers.find(x=>x.id===id);
+  if(m) m[field] = value;
+}
+
+function unionTypeLabel(t){
+  return {married:'婚姻', divorced:'離婚', separated:'分居', partner:'同居伴侶'}[t] || t;
+}
+
+function memberOptions(selectedId, allowNone){
+  let opts = allowNone ? `<option value="" ${!selectedId?'selected':''}>（無／單親）</option>` : '';
+  opts += cfGenoMembers.map(m => `<option value="${m.id}" ${m.id===selectedId?'selected':''}>${escHtml(m.name||'未命名成員')}</option>`).join('');
+  return opts;
+}
+
+function renderGenoBuilder(){
+  const mEl = document.getElementById('cf-geno-members-list');
+  if(!mEl) return;
+  mEl.innerHTML = cfGenoMembers.length ? cfGenoMembers.map(m => `
+    <div class="geno-row">
+      <input value="${escHtml(m.name)}" placeholder="稱謂，例如：父親" oninput="updateGenoMemberField('${m.id}','name',this.value)">
+      <select onchange="updateGenoMemberField('${m.id}','gender',this.value)">
+        <option value="F" ${m.gender==='F'?'selected':''}>女</option>
+        <option value="M" ${m.gender==='M'?'selected':''}>男</option>
+      </select>
+      <input type="number" placeholder="年齡" value="${m.age??''}" oninput="updateGenoMemberField('${m.id}','age', this.value?parseInt(this.value):null)">
+      <label class="geno-chk"><input type="checkbox" ${m.deceased?'checked':''} onchange="updateGenoMemberField('${m.id}','deceased',this.checked)">已故</label>
+      <label class="geno-chk"><input type="checkbox" ${m.sameHousehold?'checked':''} onchange="updateGenoMemberField('${m.id}','sameHousehold',this.checked)">同住</label>
+      <label class="geno-chk"><input type="radio" name="cf-geno-index" ${m.isIndex?'checked':''} onchange="setGenoIndex('${m.id}')">本案當事人</label>
+      <input value="${escHtml(m.note||'')}" placeholder="備註" oninput="updateGenoMemberField('${m.id}','note',this.value)">
+      <button type="button" class="geno-del" onclick="removeGenoMember('${m.id}')">✕</button>
+    </div>`).join('') : '<div class="geno-empty-hint">尚未新增家庭成員，點下方按鈕開始新增</div>';
+
+  const uEl = document.getElementById('cf-geno-unions-list');
+  if(!uEl) return;
+  uEl.innerHTML = cfGenoUnions.length ? cfGenoUnions.map(u => `
+    <div class="geno-union-row">
+      <select onchange="updateGenoUnionField('${u.id}','a',this.value)">${memberOptions(u.a)}</select>
+      <select onchange="updateGenoUnionField('${u.id}','b',this.value)">${memberOptions(u.b, true)}</select>
+      <select onchange="updateGenoUnionField('${u.id}','type',this.value)">
+        ${['married','divorced','separated','partner'].map(t=>`<option value="${t}" ${u.type===t?'selected':''}>${unionTypeLabel(t)}</option>`).join('')}
+      </select>
+      <button type="button" class="geno-del" onclick="removeGenoUnion('${u.id}')">✕</button>
+      <div class="geno-children-pick">子女：${cfGenoMembers.length ? cfGenoMembers.map(m=>`<label class="geno-chk"><input type="checkbox" ${u.children.includes(m.id)?'checked':''} onchange="toggleUnionChild('${u.id}','${m.id}',this.checked)">${escHtml(m.name||'未命名')}</label>`).join('') : '（請先新增成員）'}</div>
+    </div>`).join('') : '<div class="geno-empty-hint">尚未新增關係，點下方按鈕開始新增</div>';
+}
+
+function addGenoMember(){
+  cfGenoMembers.push({
+    id: 'g'+(cfGenoIdCounter++), name:'', gender:'F', age:null,
+    deceased:false, isIndex: cfGenoMembers.length===0, sameHousehold:false, note:'',
+  });
+  renderGenoBuilder();
+}
+function removeGenoMember(id){
+  cfGenoMembers = cfGenoMembers.filter(m=>m.id!==id);
+  cfGenoUnions = cfGenoUnions.filter(u=>u.a!==id && u.b!==id);
+  cfGenoUnions.forEach(u=>{ u.children = u.children.filter(cid=>cid!==id); });
+  renderGenoBuilder();
+}
+function setGenoIndex(id){
+  cfGenoMembers.forEach(m=>{ m.isIndex = (m.id===id); });
+}
+function addGenoUnion(){
+  if(cfGenoMembers.length===0){ showToast('⚠ 請先新增至少一位成員'); return; }
+  cfGenoUnions.push({id:'u'+(cfGenoIdCounter++), a:cfGenoMembers[0].id, b:null, type:'married', children:[]});
+  renderGenoBuilder();
+}
+function removeGenoUnion(id){
+  cfGenoUnions = cfGenoUnions.filter(u=>u.id!==id);
+  renderGenoBuilder();
+}
+function updateGenoUnionField(id, field, value){
+  const u = cfGenoUnions.find(x=>x.id===id);
+  if(u) u[field] = value || null;
+}
+function toggleUnionChild(unionId, memberId, checked){
+  const u = cfGenoUnions.find(x=>x.id===unionId);
+  if(!u) return;
+  if(checked){ if(!u.children.includes(memberId)) u.children.push(memberId); }
+  else { u.children = u.children.filter(c=>c!==memberId); }
+}
+
+function loadGenogramIntoBuilder(g){
+  cfGenoMembers = [];
+  cfGenoUnions = [];
+  cfGenoIdCounter = 0;
+  if(g && g.members){
+    g.members.forEach(m => {
+      cfGenoMembers.push({
+        id: m.id, name: m.name||'', gender: m.gender||'F', age: m.age ?? null,
+        deceased: m.status==='deceased', isIndex: !!m.isIndex,
+        sameHousehold: !!m.sameHousehold, note: m.note||'',
+      });
+    });
+    (g.unions||[]).forEach((u,i) => {
+      cfGenoUnions.push({id:'uload'+i, a:u.a, b:u.b||null, type:u.type||'married', children:(u.children||[]).slice()});
+    });
+  }
+  renderGenoBuilder();
+}
+
+// 自動排版：依世代（父母／當事人／子女…）分配 x,y 座標，不需手動輸入
+// 決定同一世代成員的左右排列順序。
+// 一般情況下用配偶關係「串鏈」展開（A-B-C 表示 A 娶 B、B 又離婚後 C 再嫁給 A 這種狀況時，
+// 若某人有兩段婚姻關係，用鏈狀展開會自然把他/她排在兩位配偶中間，
+// 避免婚姻線畫出來時穿過中間人的圖示、造成視覺上誤判成另一段關係。
+function orderGenerationLevel(levelIds, unions){
+  const adj = {};
+  levelIds.forEach(id => { adj[id] = []; });
+  unions.forEach(u => {
+    if(u.b && levelIds.includes(u.a) && levelIds.includes(u.b)){
+      adj[u.a].push(u.b);
+      adj[u.b].push(u.a);
+    }
+  });
+
+  const visited = new Set();
+  const result = [];
+  levelIds.forEach(startId => {
+    if(visited.has(startId)) return;
+    let chain = [startId];
+    visited.add(startId);
+    // 向右展開（接上尚未拜訪的配偶）
+    let extended = true;
+    while(extended){
+      extended = false;
+      const tail = chain[chain.length - 1];
+      const next = adj[tail].find(p => !visited.has(p));
+      if(next){ chain.push(next); visited.add(next); extended = true; }
+    }
+    // 向左展開（同一個起點若還有另一位配偶，接在左邊）
+    extended = true;
+    while(extended){
+      extended = false;
+      const head = chain[0];
+      const prev = adj[head].find(p => !visited.has(p));
+      if(prev){ chain.unshift(prev); visited.add(prev); extended = true; }
+    }
+    result.push(...chain);
+  });
+  levelIds.forEach(id => { if(!visited.has(id)){ result.push(id); visited.add(id); } });
+  return result;
+}
+
+function autoLayoutGenogram(members, unions){
+  if(!members.length) return {members:[], unions:[]};
+  const byId = id => members.find(m=>m.id===id);
+  const gen = {};
+  const indexMember = members.find(m=>m.isIndex) || members[0];
+  gen[indexMember.id] = 0;
+
+  for(let pass=0; pass<6; pass++){
+    unions.forEach(u=>{
+      const aG = gen[u.a], bG = (u.b && gen[u.b]!==undefined) ? gen[u.b] : undefined;
+      if(aG!==undefined && u.b && bG===undefined) gen[u.b] = aG;
+      if(bG!==undefined && gen[u.a]===undefined) gen[u.a] = bG;
+      const parentGen = gen[u.a]!==undefined ? gen[u.a] : bG;
+      if(parentGen!==undefined){
+        u.children.forEach(cid=>{ if(gen[cid]===undefined) gen[cid] = parentGen+1; });
+      }
+    });
+  }
+  members.forEach(m=>{ if(gen[m.id]===undefined) gen[m.id] = gen[indexMember.id]; });
+
+  const genVals = Object.values(gen);
+  const minGen = Math.min(...genVals);
+  Object.keys(gen).forEach(k => gen[k] -= minGen);
+  const maxGen = Math.max(...Object.values(gen));
+
+  const positioned = [];
+  for(let g=0; g<=maxGen; g++){
+    const levelIds = members.filter(m=>gen[m.id]===g).map(m=>m.id);
+    const ordered = orderGenerationLevel(levelIds, unions);
+    ordered.forEach((id,idx)=>{
+      const m = byId(id);
+      positioned.push({...m, x: idx, y: g});
+    });
+  }
+
+  return {
+    members: positioned.map(m => {
+      const out = {id:m.id, name:m.name||'成員', gender:m.gender||'F', x:m.x, y:m.y};
+      if(m.age!==null && m.age!==undefined && m.age!=='') out.age = typeof m.age==='number' ? m.age : parseInt(m.age);
+      if(m.deceased) out.status = 'deceased';
+      if(m.isIndex) out.isIndex = true;
+      if(m.sameHousehold) out.sameHousehold = true;
+      if(m.note) out.note = m.note;
+      return out;
+    }),
+    unions: unions.map(u => ({a:u.a, b:u.b||null, type:u.type, children:u.children.slice()})),
+  };
+}
+
 function openCaseForm(caseId){
   caseFormEditId = caseId || null;
   pickingLocation = false;
@@ -1544,6 +2342,8 @@ function openCaseForm(caseId){
     document.getElementById('cf-type').value = c.type||'';
     document.getElementById('cf-area').value = c.area||'';
     document.getElementById('cf-worker').value = c.worker||'';
+    document.getElementById('cf-status').value = c.status||'active';
+    document.getElementById('cf-reopened').checked = !!c.reopened;
     document.getElementById('cf-risk').value = c.risk||'watch';
     document.getElementById('cf-freq').value = c.freqDays||14;
     document.getElementById('cf-gender').value = c.gender||'女';
@@ -1555,10 +2355,13 @@ function openCaseForm(caseId){
     document.getElementById('cf-reason').value = c.openReason||'';
     document.getElementById('cf-lat').value = c.lat;
     document.getElementById('cf-lon').value = c.lon;
+    loadGenogramIntoBuilder(c.genogram);
   } else {
     title.textContent = '新增個案';
     ['cf-id','cf-type','cf-area','cf-worker','cf-age','cf-household','cf-living','cf-reason','cf-lastvisit'].forEach(id=>document.getElementById(id).value='');
     document.getElementById('cf-id').disabled = false;
+    document.getElementById('cf-status').value = 'active';
+    document.getElementById('cf-reopened').checked = false;
     document.getElementById('cf-risk').value = 'watch';
     document.getElementById('cf-freq').value = 14;
     document.getElementById('cf-gender').value = '女';
@@ -1566,6 +2369,7 @@ function openCaseForm(caseId){
     const c = map.getCenter();
     document.getElementById('cf-lat').value = c.lat.toFixed(4);
     document.getElementById('cf-lon').value = c.lng.toFixed(4);
+    loadGenogramIntoBuilder(null);
   }
   document.getElementById('cf-pick-btn').classList.remove('active');
   document.getElementById('case-form-overlay').classList.add('show');
@@ -1595,6 +2399,8 @@ function submitCaseForm(){
     id, type,
     area: document.getElementById('cf-area').value.trim(),
     worker: document.getElementById('cf-worker').value.trim(),
+    status: document.getElementById('cf-status').value,
+    reopened: document.getElementById('cf-reopened').checked,
     risk: document.getElementById('cf-risk').value,
     freqDays: parseInt(document.getElementById('cf-freq').value)||14,
     gender: document.getElementById('cf-gender').value,
@@ -1606,6 +2412,7 @@ function submitCaseForm(){
     openReason: document.getElementById('cf-reason').value.trim(),
     lat: parseFloat(document.getElementById('cf-lat').value),
     lon: parseFloat(document.getElementById('cf-lon').value),
+    genogram: cfGenoMembers.length > 0 ? autoLayoutGenogram(cfGenoMembers, cfGenoUnions) : null,
   };
 
   if(caseFormEditId){
@@ -1614,7 +2421,6 @@ function submitCaseForm(){
     showToast('✓ 個案已更新');
     activeCaseId = caseFormEditId;
   } else {
-    data.genogram = null;
     data.history = [];
     CASES.unshift(data);
     showToast('✓ 已新增個案');
@@ -1793,11 +2599,11 @@ function toggleSelect(id){
   }
   CASES.forEach(c => {
     const m = markers[c.id];
-    const col = riskColor(c.risk);
+    const bg = markerBackground(c);
     const inRoute = selected.has(c.id);
     const html = `<div style="
       width:${inRoute?20:18}px;height:${inRoute?20:18}px;border-radius:50%;
-      background:${col};
+      background:${bg};
       border:${inRoute?'3px solid #2563eb':'2.5px solid white'};
       box-shadow:${inRoute?'0 0 0 2px rgba(37,99,235,.3),':''}0 2px 6px rgba(0,0,0,.25);
       transition:all .15s;
@@ -1818,7 +2624,7 @@ function updateRouteBar(){
   const btn = document.getElementById('route-btn');
   const count = document.getElementById('route-count');
   if(n===0){ count.innerHTML = '尚未選取個案'; btn.disabled = true; }
-  else { count.innerHTML = `已選取 <strong>${n}</strong> 個案 · 點下方開啟 Google Maps`; btn.disabled = false; }
+  else { count.innerHTML = `已選取 <strong>${n}</strong> 個案 · 從${INSTITUTION.name}出發`; btn.disabled = false; }
 }
 
 // ═══════════════════════════════
@@ -1828,7 +2634,7 @@ function updateRouteBar(){
 function openGoogleMaps(){
   const cases = CASES.filter(c => selected.has(c.id));
   if(cases.length === 0) return;
-  const origin = '25.0375,121.5637';
+  const origin = `${INSTITUTION.lat},${INSTITUTION.lon}`;
   const waypoints = cases.map(c => `${c.lat},${c.lon}`).join('/');
   const url = `https://www.google.com/maps/dir/${origin}/${waypoints}/?travelmode=driving`;
   window.open(url, '_blank');
@@ -1848,15 +2654,63 @@ function openSingleMap(){
 function initStats(){
   const today = new Date();
   document.getElementById('today-date').textContent = today.toLocaleDateString('zh-TW',{year:'numeric',month:'long',day:'numeric'});
-  document.getElementById('h-urgent').textContent = CASES.filter(c=>c.risk==='urgent').length;
-  document.getElementById('h-due').textContent = CASES.filter(c=>isOverdue(c)).length;
-  document.getElementById('h-total').textContent = CASES.length;
+  const scope = activeWorker==='all' ? CASES : CASES.filter(c=>c.worker===activeWorker);
+  document.getElementById('h-urgent').textContent = scope.filter(c=>c.status==='active' && c.risk==='urgent').length;
+  document.getElementById('h-watch').textContent = scope.filter(c=>c.status==='active' && c.risk==='watch').length;
+  document.getElementById('h-stable').textContent = scope.filter(c=>c.status==='active' && c.risk==='stable').length;
+  document.getElementById('h-due').textContent = scope.filter(c=>c.status==='active' && isOverdue(c)).length;
+  document.getElementById('h-closed').textContent = scope.filter(c=>c.status==='closed').length;
+  document.getElementById('h-total').textContent = scope.filter(c=>{
+    const d = new Date(c.lastVisit);
+    return d.getFullYear()===today.getFullYear();
+  }).length;
+  document.getElementById('h-year').textContent = scope.filter(c=>{
+    const d = new Date(c.open);
+    return d.getFullYear()===today.getFullYear();
+  }).length;
+}
+
+// ═══════════════════════════════
+// 社工篩選（上方下拉選單）
+// ═══════════════════════════════
+function populateWorkerFilter(){
+  const sel = document.getElementById('worker-filter');
+  const workers = Array.from(new Set(CASES.map(c=>c.worker).filter(Boolean))).sort();
+  const prevValue = sel.value || 'all';
+  sel.innerHTML = '<option value="all">全部社工</option>' +
+    workers.map(w => `<option value="${w}">${w}</option>`).join('');
+  sel.value = workers.includes(prevValue) ? prevValue : 'all';
+}
+
+function setWorkerFilter(value){
+  activeWorker = value;
+  renderList();
+  initStats();
+}
+
+function clearAllFilters(){
+  activeWorker = 'all';
+  document.getElementById('worker-filter').value = 'all';
+  setFilter('all', document.querySelector('.fchip.all'));
 }
 
 document.addEventListener('keydown', e => { if(e.key==='Escape'){ closeRecordDetail(); closeCaseForm(); closeVisitForm(); } });
 
+populateWorkerFilter();
 initStats();
 renderList();
+
+// ═══════════════════════════════
+// PWA：註冊 Service Worker
+// ═══════════════════════════════
+// 只有透過 https:// 或 localhost 開啟時才會生效（用 file:// 直接開啟本機檔案不會安裝，這是瀏覽器的安全限制，正常現象）
+if('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(err => {
+      console.warn('Service Worker 註冊失敗（不影響網頁基本功能）', err);
+    });
+  });
+}
 </script>
 </body>
 </html>
