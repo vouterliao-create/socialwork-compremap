@@ -1187,7 +1187,14 @@ const SEED_CASES = [
 
   {id:"D-2501",type:"中低收入戶",lat:25.0679,lon:121.5125,area:"大同區",worker:"陳社工",risk:"watch",open:"2024-02-05",lastVisit:"2024-03-01",freqDays:30,
     gender:"女",age:39,household:"與兩名子女同住",living:"租賃公寓",openReason:"里幹事轉介，家庭經濟陷入困境，已完成中低收入戶資格認定",
-    genogram:null,
+    genogram:{
+      members:[
+        {id:"w1",name:"案主本人",gender:"F",age:39,isIndex:true,x:0,y:0,sameHousehold:true},
+        {id:"c1",name:"長子",gender:"M",age:12,x:0,y:1,sameHousehold:true},
+        {id:"c2",name:"次子",gender:"M",age:9,x:1,y:1,sameHousehold:true},
+      ],
+      unions:[{a:"w1",b:null,type:"married",children:["c1","c2"]}],
+    },
     history:[
       {date:"2024-03-01",worker:"陳社工",risk:"watch",summary:"完成中低收入戶資格認定，協助申請學雜費減免與健保自付保費補助。"},
       {date:"2024-02-05",worker:"陳社工",risk:"watch",summary:"首次接案訪視，了解家庭經濟狀況，備齊申請文件協助送件。"},
@@ -1195,14 +1202,26 @@ const SEED_CASES = [
 
   {id:"D-2508",type:"急難救助",lat:25.0972,lon:121.5250,area:"士林區",worker:"林社工",risk:"urgent",open:"2024-11-20",lastVisit:"2024-11-20",freqDays:7,
     gender:"男",age:52,household:"獨居",living:"租賃套房",openReason:"里長通報，案主因意外事故短期無法工作，生活陷入困境",
-    genogram:null,
+    genogram:{
+      members:[
+        {id:"w1",name:"案主本人",gender:"M",age:52,isIndex:true,x:0,y:0,sameHousehold:true,note:"獨居"},
+      ],
+      unions:[],
+    },
     history:[
       {date:"2024-11-20",worker:"林社工",risk:"urgent",summary:"協助申請急難救助金，並轉介短期生活扶助與醫療資源。"},
     ]},
 
   {id:"D-2515",type:"特殊境遇家庭",lat:24.9887,lon:121.5701,area:"文山區",worker:"王社工",risk:"watch",open:"2024-05-15",lastVisit:"2024-06-10",freqDays:21,
     gender:"女",age:34,household:"與一名子女同住",living:"租賃公寓",openReason:"醫院社工轉介，配偶因故死亡，獨自育有一名子女，經濟與心理均需支持",
-    genogram:null,
+    genogram:{
+      members:[
+        {id:"h1",name:"配偶(已故)",gender:"M",age:36,status:"deceased",x:0,y:0},
+        {id:"w1",name:"案主本人",gender:"F",age:34,isIndex:true,x:1,y:0,sameHousehold:true},
+        {id:"c1",name:"女兒",gender:"F",age:8,x:1,y:1,sameHousehold:true},
+      ],
+      unions:[{a:"h1",b:"w1",type:"married",children:["c1"]}],
+    },
     history:[
       {date:"2024-06-10",worker:"王社工",risk:"watch",summary:"完成特殊境遇家庭資格認定，協助申請子女教育補助及心理諮商轉介。"},
       {date:"2024-05-15",worker:"王社工",risk:"watch",summary:"首次訪視，了解案家經濟與情緒狀況，說明可申請之福利項目。"},
@@ -1210,7 +1229,12 @@ const SEED_CASES = [
 
   {id:"E-2601",type:"低收入戶",lat:25.0546,lon:121.6066,area:"南港區",worker:"林社工",risk:"watch",open:"2023-08-12",lastVisit:"2024-11-02",freqDays:21,
     gender:"男",age:80,household:"獨居",living:"自有老舊公寓",openReason:"里幹事轉介，長者列冊低收入戶，需持續關懷生活狀況",
-    genogram:null,
+    genogram:{
+      members:[
+        {id:"w1",name:"案主本人",gender:"M",age:80,isIndex:true,x:0,y:0,sameHousehold:true,note:"獨居"},
+      ],
+      unions:[],
+    },
     history:[
       {date:"2024-11-02",worker:"林社工",risk:"watch",summary:"生活扶助按期核發，行動能力尚可自理，暫無迫切需求。"},
       {date:"2024-10-12",worker:"林社工",risk:"watch",summary:"定期訪視，居家環境整潔，關心低收資格複核事宜。"},
@@ -1218,7 +1242,14 @@ const SEED_CASES = [
 
   {id:"E-2608",type:"兒童保護",lat:25.0692,lon:121.5877,area:"內湖區",worker:"陳社工",risk:"watch",open:"2024-04-18",lastVisit:"2024-11-15",freqDays:14,
     gender:"男",age:9,household:"與父母同住",living:"自有公寓",openReason:"學校輔導老師轉介，疑似同儕霸凌併照顧疏忽",
-    genogram:null,
+    genogram:{
+      members:[
+        {id:"f1",name:"父親",gender:"M",age:38,x:0,y:0,sameHousehold:true},
+        {id:"m1",name:"母親",gender:"F",age:36,x:1,y:0,sameHousehold:true},
+        {id:"c1",name:"案童",gender:"M",age:9,isIndex:true,x:0,y:1,sameHousehold:true},
+      ],
+      unions:[{a:"f1",b:"m1",type:"married",children:["c1"]}],
+    },
     history:[
       {date:"2024-11-15",worker:"陳社工",risk:"watch",summary:"與學校保持聯繫，出席狀況穩定，家長配合親職教育課程。"},
       {date:"2024-10-30",worker:"陳社工",risk:"watch",summary:"家訪了解親子互動，親職教育課程出席率良好。"},
@@ -1226,14 +1257,28 @@ const SEED_CASES = [
 
   {id:"E-2615",type:"身心障礙",lat:25.0558,lon:121.5677,area:"松山區",worker:"王社工",risk:"stable",open:"2022-06-01",lastVisit:"2024-11-20",freqDays:60,
     gender:"女",age:29,household:"與父母同住",living:"自有公寓",openReason:"醫院社工轉介，領有身心障礙證明，家屬照顧穩定",
-    genogram:null,
+    genogram:{
+      members:[
+        {id:"f1",name:"父親",gender:"M",age:60,x:0,y:0,sameHousehold:true},
+        {id:"m1",name:"母親",gender:"F",age:57,x:1,y:0,sameHousehold:true},
+        {id:"w1",name:"案主本人",gender:"F",age:29,isIndex:true,x:0,y:1,sameHousehold:true},
+      ],
+      unions:[{a:"f1",b:"m1",type:"married",children:["w1"]}],
+    },
     history:[
       {date:"2024-11-20",worker:"王社工",risk:"stable",summary:"輔具使用狀況良好，日照服務銜接穩定，家屬照顧負荷可控。"},
     ]},
 
   {id:"E-2622",type:"家庭暴力",lat:25.0324,lon:121.5197,area:"中正區",worker:"陳社工",risk:"urgent",open:"2024-10-05",lastVisit:"2024-11-25",freqDays:7,
     gender:"女",age:31,household:"與一名子女同住",living:"庇護安置中",openReason:"警政通報，遭受親密關係暴力，已申請保護令",
-    genogram:null,
+    genogram:{
+      members:[
+        {id:"h1",name:"前配偶(已搬離)",gender:"M",age:33,x:0,y:0,note:"保護令生效中"},
+        {id:"w1",name:"案主本人",gender:"F",age:31,isIndex:true,x:1,y:0,sameHousehold:true},
+        {id:"c1",name:"女兒",gender:"F",age:5,x:1,y:1,sameHousehold:true},
+      ],
+      unions:[{a:"h1",b:"w1",type:"separated",children:["c1"]}],
+    },
     history:[
       {date:"2024-11-25",worker:"陳社工",risk:"urgent",summary:"保護令審理中，案主情緒仍不穩定，持續提供安全計畫與心理支持。"},
       {date:"2024-11-08",worker:"陳社工",risk:"urgent",summary:"陪同驗傷取證，協助聲請緊急保護令。"},
@@ -1241,21 +1286,38 @@ const SEED_CASES = [
 
   {id:"E-2629",type:"精神健康",lat:25.0299,lon:121.4990,area:"萬華區",worker:"林社工",risk:"watch",open:"2023-12-01",lastVisit:"2024-11-18",freqDays:14,
     gender:"男",age:46,household:"獨居",living:"租賃套房",openReason:"衛生所社區關懷訪視員轉介，規律服藥追蹤中",
-    genogram:null,
+    genogram:{
+      members:[
+        {id:"w1",name:"案主本人",gender:"M",age:46,isIndex:true,x:0,y:0,sameHousehold:true,note:"獨居"},
+      ],
+      unions:[],
+    },
     history:[
       {date:"2024-11-18",worker:"林社工",risk:"watch",summary:"服藥遵從性良好，情緒穩定，社區關懷訪視員持續陪伴。"},
     ]},
 
   {id:"E-2636",type:"低收入戶",lat:25.0210,lon:121.5498,area:"大安區",worker:"王社工",risk:"stable",open:"2022-09-10",lastVisit:"2024-11-10",freqDays:30,
     gender:"女",age:58,household:"獨居",living:"租賃套房",openReason:"里幹事轉介，長期列冊低收入戶關懷對象",
-    genogram:null,
+    genogram:{
+      members:[
+        {id:"w1",name:"案主本人",gender:"F",age:58,isIndex:true,x:0,y:0,sameHousehold:true,note:"獨居"},
+      ],
+      unions:[],
+    },
     history:[
       {date:"2024-11-10",worker:"王社工",risk:"stable",summary:"生活扶助按期核發，案主身心狀況穩定，暫無新增需求。"},
     ]},
 
   {id:"E-2643",type:"未成年家長",lat:25.0306,lon:121.5697,area:"信義區",worker:"陳社工",risk:"watch",open:"2024-07-22",lastVisit:"2024-11-28",freqDays:14,
     gender:"女",age:18,household:"與男友同住",living:"租賃套房",openReason:"醫院社工轉介，未成年產婦，育有一名嬰兒",
-    genogram:null,
+    genogram:{
+      members:[
+        {id:"w1",name:"案主本人",gender:"F",age:18,isIndex:true,x:0,y:0,sameHousehold:true},
+        {id:"p1",name:"男友",gender:"M",age:19,x:1,y:0,sameHousehold:true},
+        {id:"baby1",name:"嬰兒",gender:"F",age:0,x:0,y:1,sameHousehold:true},
+      ],
+      unions:[{a:"w1",b:"p1",type:"partner",children:["baby1"]}],
+    },
     history:[
       {date:"2024-11-28",worker:"陳社工",risk:"watch",summary:"育兒信心逐漸提升，托育補助申請已核准，持續參與親職教育團體。"},
       {date:"2024-11-01",worker:"陳社工",risk:"watch",summary:"嬰兒健檢正常，關心案主與男友關係穩定度。"},
@@ -1263,21 +1325,41 @@ const SEED_CASES = [
 
   {id:"E-2650",type:"中低收入戶",lat:25.0937,lon:121.5264,area:"士林區",worker:"林社工",risk:"stable",open:"2023-03-15",lastVisit:"2024-11-05",freqDays:30,
     gender:"男",age:41,household:"與母親同住",living:"母親自有住宅",openReason:"更生保護會轉介，經濟狀況核列中低收入戶，持續關懷",
-    genogram:null,
+    genogram:{
+      members:[
+        {id:"m1",name:"母親",gender:"F",age:68,x:0,y:0,sameHousehold:true},
+        {id:"w1",name:"案主本人",gender:"M",age:41,isIndex:true,x:0,y:1,sameHousehold:true},
+      ],
+      unions:[{a:"m1",b:null,type:"married",children:["w1"]}],
+    },
     history:[
       {date:"2024-11-05",worker:"林社工",risk:"stable",summary:"穩定就業超過一年，中低收入戶資格複核通過，家庭經濟逐漸改善。"},
     ]},
 
   {id:"E-2657",type:"新住民",lat:25.1315,lon:121.4989,area:"北投區",worker:"王社工",risk:"stable",open:"2023-11-08",lastVisit:"2024-11-12",freqDays:60,
     gender:"女",age:33,household:"與配偶及一名子女同住",living:"配偶自有住宅",openReason:"移民署轉介，新住民生活適應關懷",
-    genogram:null,
+    genogram:{
+      members:[
+        {id:"w1",name:"案主本人",gender:"F",age:33,isIndex:true,x:0,y:0,sameHousehold:true,note:"原生家庭在海外"},
+        {id:"h1",name:"配偶",gender:"M",age:35,x:1,y:0,sameHousehold:true},
+        {id:"c1",name:"子女",gender:"M",age:5,x:0,y:1,sameHousehold:true},
+      ],
+      unions:[{a:"w1",b:"h1",type:"married",children:["c1"]}],
+    },
     history:[
       {date:"2024-11-12",worker:"王社工",risk:"stable",summary:"中文能力進步，已取得工作許可，家庭關係穩定。"},
     ]},
 
   {id:"E-2664",type:"急難救助",lat:25.0691,lon:121.5325,area:"中山區",worker:"陳社工",risk:"watch",open:"2024-06-20",lastVisit:"2024-11-22",freqDays:14,
     gender:"男",age:35,household:"與家人同住",living:"家人自有住宅",openReason:"因故短期無法工作，家庭收入中斷，申請急難救助金",
-    genogram:null,
+    genogram:{
+      members:[
+        {id:"f1",name:"父親",gender:"M",age:63,x:0,y:0,sameHousehold:true},
+        {id:"m1",name:"母親",gender:"F",age:60,x:1,y:0,sameHousehold:true},
+        {id:"w1",name:"案主本人",gender:"M",age:35,isIndex:true,x:0,y:1,sameHousehold:true},
+      ],
+      unions:[{a:"f1",b:"m1",type:"married",children:["w1"]}],
+    },
     history:[
       {date:"2024-11-22",worker:"陳社工",risk:"watch",summary:"急難救助金已核發，家庭生活穩定，持續追蹤後續就業狀況。"},
       {date:"2024-11-01",worker:"陳社工",risk:"watch",summary:"家屬反映家庭經濟壓力略有緩解，持續關懷。"},
@@ -1285,7 +1367,13 @@ const SEED_CASES = [
 
   {id:"E-2671",type:"特殊境遇家庭",lat:24.9990,lon:121.5602,area:"文山區",worker:"林社工",risk:"watch",open:"2024-05-08",lastVisit:"2024-11-27",freqDays:14,
     gender:"女",age:16,household:"與母親同住",living:"租賃公寓",openReason:"學校輔導室轉介，單親家庭經核列特殊境遇家庭，子女就學狀況待關注",
-    genogram:null,
+    genogram:{
+      members:[
+        {id:"m1",name:"母親",gender:"F",age:45,x:0,y:0,sameHousehold:true},
+        {id:"w1",name:"案主本人",gender:"F",age:16,isIndex:true,x:0,y:1,sameHousehold:true},
+      ],
+      unions:[{a:"m1",b:null,type:"divorced",children:["w1"]}],
+    },
     history:[
       {date:"2024-11-27",worker:"林社工",risk:"watch",summary:"出席狀況改善，特殊境遇家庭子女教育補助已核准，持續與學校保持聯繫。"},
       {date:"2024-11-10",worker:"林社工",risk:"watch",summary:"家訪了解母女互動狀況，關心家庭經濟與情緒支持。"},
@@ -1293,7 +1381,16 @@ const SEED_CASES = [
 
   {id:"E-2678",type:"中低收入戶",lat:25.0700,lon:121.5080,area:"大同區",worker:"王社工",risk:"stable",open:"2023-05-20",lastVisit:"2024-11-06",freqDays:45,
     gender:"女",age:45,household:"與配偶及三名子女同住",living:"自有公寓",openReason:"社福中心定期關懷，家庭經濟核列中低收入戶，持續追蹤",
-    genogram:null,
+    genogram:{
+      members:[
+        {id:"h1",name:"配偶",gender:"M",age:47,x:0,y:0,sameHousehold:true},
+        {id:"w1",name:"案主本人",gender:"F",age:45,isIndex:true,x:1,y:0,sameHousehold:true},
+        {id:"c1",name:"長子",gender:"M",age:17,x:0,y:1,sameHousehold:true},
+        {id:"c2",name:"次子",gender:"M",age:14,x:1,y:1,sameHousehold:true},
+        {id:"c3",name:"三子",gender:"M",age:10,x:2,y:1,sameHousehold:true},
+      ],
+      unions:[{a:"h1",b:"w1",type:"married",children:["c1","c2","c3"]}],
+    },
     history:[
       {date:"2024-11-06",worker:"王社工",risk:"stable",summary:"家庭功能持續改善，子女學雜費減免申請已核准，經濟狀況穩定。"},
     ]},
