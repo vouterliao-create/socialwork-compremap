@@ -2,7 +2,7 @@
 // 用途：快取「網頁本身」讓已安裝的 App 離線也能打開；
 // 地圖圖層與 Google Maps 仍需要網路連線才能顯示。
 
-const CACHE_NAME = 'casemap-app-v3';
+const CACHE_NAME = 'casemap-app-v4';
 const APP_SHELL = [
   './index.html',
   './manifest.json',
@@ -13,7 +13,10 @@ const APP_SHELL = [
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL))
+    // 逐一加入快取：就算其中某個檔案抓不到，也不會讓整個 Service Worker 安裝失敗
+    caches.open(CACHE_NAME).then((cache) =>
+      Promise.all(APP_SHELL.map((url) => cache.add(url).catch(() => {})))
+    )
   );
   self.skipWaiting();
 });
