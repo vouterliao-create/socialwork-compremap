@@ -804,6 +804,13 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
 <div class="toast" id="toast"></div>
 
 <script>
+// 以「本地時間」產生 YYYY-MM-DD 字串。
+// 不可用 toISOString()：它回傳 UTC 日期，在台灣（UTC+8）每天 00:00–08:00 會變成前一天。
+function localDateStr(d = new Date()){
+  const p = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
+}
+
 // ═══════════════════════════════
 // 虛構示範資料（非真實個人資料）
 // ═══════════════════════════════
@@ -901,7 +908,7 @@ const SEED_CASES = [
           subjective:"兒童對瘀傷成因之說明前後不一致，父親則表示「自己不小心跌倒的」，雙方說法有出入。",
           objective:"兒童身上發現瘀傷，位置與描述之跌倒情形不完全相符，已依法通報警政單位，待進一步調查。",
           bio:"身體檢視發現瘀傷，已建議轉介醫療進行詳細評估及驗傷。",
-          psycho:"兒童於訪談中情緒略顯緊張，對相關問題之回應簡短且閉避。",
+          psycho:"兒童於訪談中情緒略顯緊張，對相關問題之回應簡短且迴避。",
           social:"家庭照顧穩定性再度受到質疑，跨單位（警政、教育）協調介入中。",
           eco:"經濟狀況未變，非本次重點議題。",
           swot:{s:"學校敏感度高，及時通報爭取介入時機",w:"親子雙方說法不一致，照顧安全性存疑",o:"已啟動跨單位協調機制，可整合多方資源共同評估",t:"若調查證實照顧疏忽或不當對待，兒童人身安全風險升高"},
@@ -1082,7 +1089,7 @@ const SEED_CASES = [
       {date:"2024-11-16",worker:"林社工",risk:"stable",summary:"日常生活功能尚可，社區活動參與度高，情緒穩定。"},
     ]},
 
-  {id:"B-2331",type:"未成年家長",lat:25.0361,lon:121.5049,area:"中和區",worker:"陳社工",risk:"watch",open:"2024-06-01",lastVisit:"2025-01-12",freqDays:14,
+  {id:"B-2331",type:"未成年家長",lat:25.0361,lon:121.5049,area:"萬華區",worker:"陳社工",risk:"watch",open:"2024-06-01",lastVisit:"2025-01-12",freqDays:14,
     gender:"女",age:17,household:"與母親同住",living:"母親租賃住所",openReason:"醫院社工轉介，未成年產婦個案",
     genogram:{
       members:[
@@ -1449,12 +1456,12 @@ SEED_CASES.forEach(c => {
   function addDays(dateStr, days){
     const d = new Date(dateStr+'T00:00:00');
     d.setDate(d.getDate() + days);
-    return d.toISOString().slice(0,10);
+    return localDateStr(d);
   }
   function daysBetween(fromStr, toStr){
     return Math.round((new Date(toStr+'T00:00:00') - new Date(fromStr+'T00:00:00')) / (1000*60*60*24));
   }
-  const todayStr = new Date().toISOString().slice(0,10);
+  const todayStr = localDateStr();
 
   // 刻意保留「逾期」示範情境的案號：距今天數 = 建議頻率 + 這裡指定的超出天數
   const OVERDUE_OVERRIDE_EXTRA_DAYS = {
@@ -1589,7 +1596,7 @@ function statusLabel(c){
 }
 
 function daysAgo(dateStr){
-  const d = new Date(dateStr);
+  const d = new Date(dateStr+'T00:00:00');
   const now = new Date();
   return Math.floor((now-d)/(1000*60*60*24));
 }
@@ -1673,43 +1680,45 @@ function buildHistTooltip(c){
     <div class="hist-row">
       <div class="hist-dot" style="background:${riskColor(h.risk)}"></div>
       <div class="hist-body">
-        <div class="hist-date">${h.date} · ${h.worker}</div>
-        <div class="hist-summary">${h.summary}</div>
+        <div class="hist-date">${escHtml(h.date)} · ${escHtml(h.worker)}</div>
+        <div class="hist-summary">${escHtml(h.summary)}</div>
       </div>
     </div>`).join('');
   const more = c.history.length > 3
     ? `<div class="hist-more">還有 ${c.history.length-3} 筆紀錄 · 點擊查看完整時間軸</div>`
     : `<div class="hist-more">點擊標記查看完整資訊</div>`;
-  const res = getResourcesForCase(c);
-  const resItems = [...res.specific, ...res.national.slice(0,1)];
-  const programHtml = res.programs.length ? `
-    <div class="hist-res-title">相關福利項目</div>
-    ${res.programs.slice(0,2).map(p => `<div class="hist-res-item"><a href="${p.link || 'https://dosw.gov.taipei/'}" target="_blank" rel="noopener">${p.name} ↗</a></div>`).join('')}
-  ` : '';
-  const resHtml = resItems.length ? `
-    <div class="hist-res-title">聯絡窗口</div>
-    ${resItems.map(r => `<div class="hist-res-item">${r.name}：<a href="${telHref(r)}">${telLabel(r)}</a></div>`).join('')}
-  ` : '';
+  // 懸停提示框無法點擊（滑鼠移過去就會消失），所以不放連結；福利資源與電話在右側詳情面板
+  const resHtml = `<div class="hist-res-title">點擊標記查看福利資源與聯絡窗口</div>`;
   const statusTag = c.status==='closed' ? '（已結案）' : c.reopened ? '（再進案）' : '';
   return `<div class="hist-tip">
-    <div class="hist-tip-head"><span class="hist-tip-id">${c.id}${statusTag}</span><span class="hist-tip-type">${c.type} · ${c.area}</span></div>
+    <div class="hist-tip-head"><span class="hist-tip-id">${escHtml(c.id)}${statusTag}</span><span class="hist-tip-type">${escHtml(c.type)} · ${escHtml(c.area)}</span></div>
     ${rows}
     ${more}
-    ${programHtml}
     ${resHtml}
   </div>`;
+}
+
+// 地圖標記圖示：已加入路線的個案加上藍框（重建標記時也會保留）
+function markerIcon(c){
+  const inRoute = selected.has(c.id);
+  const size = inRoute ? 20 : 18;
+  const html = `<div style="
+    width:${size}px;height:${size}px;border-radius:50%;
+    background:${markerBackground(c)};
+    border:${inRoute?'3px solid #2563eb':'2.5px solid white'};
+    box-shadow:${inRoute?'0 0 0 2px rgba(37,99,235,.3),':''}0 2px 6px rgba(0,0,0,.25);
+    transition:all .15s;
+  "></div>`;
+  return L.divIcon({html, iconSize:[size,size], iconAnchor:[size/2,size/2], className:''});
 }
 
 function rebuildMarkers(){
   Object.values(markers).forEach(m => map.removeLayer(m));
   for(const k in markers) delete markers[k];
   CASES.forEach(c => {
-    const bg = markerBackground(c);
-    const icon = L.divIcon({
-      html:`<div style="width:18px;height:18px;border-radius:50%;background:${bg};border:2.5px solid white;box-shadow:0 2px 6px rgba(0,0,0,.25);transition:transform .15s;"></div>`,
-      iconSize:[18,18], iconAnchor:[9,9], className:''
-    });
-    const m = L.marker([c.lat,c.lon],{icon});
+    // 座標無效的資料不畫標記，避免 Leaflet 丟錯導致整個 App 無法載入
+    if(!Number.isFinite(c.lat) || !Number.isFinite(c.lon)) return;
+    const m = L.marker([c.lat,c.lon],{icon: markerIcon(c)});
     m.bindTooltip(buildHistTooltip(c), {direction:'top', offset:[0,-11], className:'hist-leaflet-tip'});
     m.on('click',() => showCase(c.id));
     m.addTo(map);
@@ -1789,7 +1798,7 @@ function renderList(){
   const q = document.getElementById('search').value.toLowerCase();
   const list = document.getElementById('case-list');
   const filtered = CASES.filter(c => {
-    const matchSearch = !q || c.id.toLowerCase().includes(q) || c.type.includes(q) || c.area.includes(q);
+    const matchSearch = !q || c.id.toLowerCase().includes(q) || (c.type||'').toLowerCase().includes(q) || (c.area||'').toLowerCase().includes(q);
     const matchWorker = activeWorker==='all' || c.worker===activeWorker;
     return matchesActiveFilter(c) && matchSearch && matchWorker;
   });
@@ -1813,11 +1822,12 @@ function renderList(){
     const rowClass = c.status==='closed' ? 'closed' : c.risk;
     const badgeClass = c.status==='closed' ? 'risk-closed' : `risk-${c.risk}`;
     const reopenTag = c.reopened ? `<span class="reopen-badge">🔁 再進案</span>` : '';
-    return `<div class="case-item ${rowClass} ${activeCaseId===c.id?'selected':''}" onclick="showCase('${c.id}')">
-      <div class="case-cb ${isSelected?'checked':''}" onclick="event.stopPropagation();toggleSelect('${c.id}')"></div>
+    const idArg = jsArg(c.id);
+    return `<div class="case-item ${rowClass} ${activeCaseId===c.id?'selected':''}" onclick="showCase(${idArg})">
+      <div class="case-cb ${isSelected?'checked':''}" onclick="event.stopPropagation();toggleSelect(${idArg})"></div>
       <div class="case-info">
-        <div class="case-id">${c.id}</div>
-        <div class="case-type">${c.type} · ${c.area}</div>
+        <div class="case-id">${escHtml(c.id)}</div>
+        <div class="case-type">${escHtml(c.type)} · ${escHtml(c.area)}</div>
         <div class="case-meta">
           <span class="risk-badge ${badgeClass}">${statusLabel(c)}</span>${reopenTag}
           <span class="last-visit ${overdue?'overdue':''}">${c.status==='closed' ? '' : (overdue?'⚠ 已逾期 '+days+'天':'上訪 '+days+'天前')}</span>
@@ -1948,11 +1958,11 @@ function renderTimeline(c){
   el.innerHTML = c.history.map((h,i) => {
     const col = riskColor(h.risk);
     const hidden = (i>=2 && !timelineExpanded) ? 'tl-hidden' : '';
-    return `<div class="tl-item clickable ${hidden}" onclick="openRecordDetail('${c.id}',${i})">
+    return `<div class="tl-item clickable ${hidden}" onclick="openRecordDetail(${jsArg(c.id)},${i})">
       <div class="tl-dot" style="background:${col}"></div>
       <div class="tl-content">
-        <div class="tl-top"><span class="tl-date">${h.date}</span><span class="tl-worker">${h.worker}</span></div>
-        <div class="tl-summary">${h.summary}</div>
+        <div class="tl-top"><span class="tl-date">${escHtml(h.date)}</span><span class="tl-worker">${escHtml(h.worker)}</span></div>
+        <div class="tl-summary">${escHtml(h.summary)}</div>
       </div>
     </div>`;
   }).join('');
@@ -2083,7 +2093,7 @@ function renderGenogram(g){
     let ly = y + SYM/2 + 15;
     symbols += `<text x="${x}" y="${ly}" text-anchor="middle" font-size="11" font-weight="600" fill="#1e293b">${escHtml(m.name)}</text>`;
     ly += 13;
-    if(m.age){
+    if(m.age !== null && m.age !== undefined && m.age !== ''){
       symbols += `<text x="${x}" y="${ly}" text-anchor="middle" font-size="9.5" fill="#64748b">${m.age}歲</text>`;
       ly += 12;
     }
@@ -2222,16 +2232,16 @@ function openRecordDetail(caseId, idx){
   // TAB 基本資料（不受idx影響，個案層級資料一律顯示）
   document.getElementById('m-basic').innerHTML = `
     <div class="m-grid">
-      <div class="m-field"><div class="m-field-l">性別</div><div class="m-field-v">${c.gender}</div></div>
+      <div class="m-field"><div class="m-field-l">性別</div><div class="m-field-v">${escHtml(c.gender)}</div></div>
       <div class="m-field"><div class="m-field-l">年齡</div><div class="m-field-v">${(c.age!==null && c.age!==undefined) ? c.age+' 歲' : '—'}</div></div>
-      <div class="m-field"><div class="m-field-l">同住狀況</div><div class="m-field-v">${c.household}</div></div>
-      <div class="m-field"><div class="m-field-l">居住型態</div><div class="m-field-v">${c.living}</div></div>
-      <div class="m-field"><div class="m-field-l">開案日期</div><div class="m-field-v">${c.open}</div></div>
-      <div class="m-field"><div class="m-field-l">負責社工</div><div class="m-field-v">${c.worker}</div></div>
+      <div class="m-field"><div class="m-field-l">同住狀況</div><div class="m-field-v">${escHtml(c.household)}</div></div>
+      <div class="m-field"><div class="m-field-l">居住型態</div><div class="m-field-v">${escHtml(c.living)}</div></div>
+      <div class="m-field"><div class="m-field-l">開案日期</div><div class="m-field-v">${escHtml(c.open)}</div></div>
+      <div class="m-field"><div class="m-field-l">負責社工</div><div class="m-field-v">${escHtml(c.worker)}</div></div>
     </div>
     <div class="m-section" style="margin-top:12px;margin-bottom:0">
       <div class="m-sec-title">開案緣由</div>
-      <div class="m-text-block">${c.openReason}</div>
+      <div class="m-text-block">${escHtml(c.openReason)}</div>
     </div>`;
 
   // TAB 家系圖（不受idx影響）
@@ -2264,7 +2274,7 @@ function openRecordDetail(caseId, idx){
     });
     document.getElementById('m-plan').innerHTML = `
       <div class="geno-empty">尚無訪視紀錄，新增第一筆訪視紀錄後即可查看四面項評估與處遇計畫<br>
-        <button class="form-btn primary" style="margin-top:10px;width:auto;padding:8px 18px;display:inline-block;" onclick="closeRecordDetail();openVisitForm('${caseId}')">＋ 新增第一筆訪視紀錄</button>
+        <button class="form-btn primary" style="margin-top:10px;width:auto;padding:8px 18px;display:inline-block;" onclick="closeRecordDetail();openVisitForm(${jsArg(caseId)})">＋ 新增第一筆訪視紀錄</button>
       </div>`;
   } else {
     const d = getRecordDetail(c,h,idx);
@@ -2272,7 +2282,7 @@ function openRecordDetail(caseId, idx){
     document.getElementById('m-duration').textContent = `約 ${d.duration} 分鐘`;
     document.getElementById('m-subjective').textContent = d.subjective;
     document.getElementById('m-objective').textContent = d.objective;
-    document.getElementById('m-services').innerHTML = d.services.map(s=>`<span class="m-service-tag">${s}</span>`).join('');
+    document.getElementById('m-services').innerHTML = d.services.map(s=>`<span class="m-service-tag">${escHtml(s)}</span>`).join('');
     document.getElementById('m-bio').textContent = d.bio;
     document.getElementById('m-psycho').textContent = d.psycho;
     document.getElementById('m-social').textContent = d.social;
@@ -2287,8 +2297,8 @@ function openRecordDetail(caseId, idx){
       const p = d.plan[k];
       const sc = statusClassMap[p.status] || 'st-cont';
       return `<div class="plan-row">
-        <div class="plan-top"><span class="plan-label">${label}</span><span class="plan-status ${sc}">${p.status}</span></div>
-        <div class="plan-text">${p.text}</div>
+        <div class="plan-top"><span class="plan-label">${label}</span><span class="plan-status ${sc}">${escHtml(p.status)}</span></div>
+        <div class="plan-text">${escHtml(p.text)}</div>
       </div>`;
     }).join('');
   }
@@ -2312,6 +2322,8 @@ function closeRecordDetail(){
 function escHtml(s){
   return String(s ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 }
+// 把字串安全地放進 onclick="fn(...)" 的參數（案號含引號也不會壞掉）
+function jsArg(s){ return escHtml(JSON.stringify(String(s ?? ''))); }
 
 function updateGenoMemberField(id, field, value){
   const m = cfGenoMembers.find(x=>x.id===id);
@@ -2634,7 +2646,7 @@ function openCaseForm(caseId){
     document.getElementById('cf-risk').value = 'watch';
     document.getElementById('cf-freq').value = 14;
     document.getElementById('cf-gender').value = '女';
-    document.getElementById('cf-open').value = new Date().toISOString().slice(0,10);
+    document.getElementById('cf-open').value = localDateStr();
     const c = map.getCenter();
     document.getElementById('cf-lat').value = c.lat.toFixed(4);
     document.getElementById('cf-lon').value = c.lng.toFixed(4);
@@ -2699,6 +2711,10 @@ function submitCaseForm(){
   const type = document.getElementById('cf-type').value.trim();
   if(!id || !type){ showToast('⚠ 案號與服務類型為必填'); return; }
   if(!caseFormEditId && CASES.find(x=>x.id===id)){ showToast('⚠ 這個案號已經存在了'); return; }
+  const lat = parseFloat(document.getElementById('cf-lat').value);
+  const lon = parseFloat(document.getElementById('cf-lon').value);
+  if(!Number.isFinite(lat) || !Number.isFinite(lon)){ showToast('⚠ 請填寫有效的緯度與經度'); return; }
+  const ageNum = parseInt(document.getElementById('cf-age').value);
 
   const data = {
     id, type,
@@ -2709,15 +2725,14 @@ function submitCaseForm(){
     risk: document.getElementById('cf-risk').value,
     freqDays: parseInt(document.getElementById('cf-freq').value)||14,
     gender: document.getElementById('cf-gender').value,
-    age: parseInt(document.getElementById('cf-age').value)||null,
+    age: Number.isNaN(ageNum) ? null : ageNum,
     household: document.getElementById('cf-household').value.trim(),
     living: document.getElementById('cf-living').value.trim(),
     open: document.getElementById('cf-open').value,
     lastVisit: document.getElementById('cf-lastvisit').value || document.getElementById('cf-open').value,
     openReason: document.getElementById('cf-reason').value.trim(),
     address: document.getElementById('cf-address').value.trim(),
-    lat: parseFloat(document.getElementById('cf-lat').value),
-    lon: parseFloat(document.getElementById('cf-lon').value),
+    lat, lon,
     genogram: cfGenoMembers.length > 0 ? autoLayoutGenogram(cfGenoMembers, cfGenoUnions) : null,
   };
 
@@ -2809,7 +2824,7 @@ function openVisitForm(caseId, idx=null){
     ['vf-worker','vf-summary','vf-method','vf-duration','vf-services','vf-subjective','vf-objective',
      'vf-bio','vf-psycho','vf-social','vf-eco','vf-swot-s','vf-swot-w','vf-swot-o','vf-swot-t',
      'vf-plan-short-text','vf-plan-mid-text','vf-plan-long-text'].forEach(id=>document.getElementById(id).value='');
-    document.getElementById('vf-date').value = new Date().toISOString().slice(0,10);
+    document.getElementById('vf-date').value = localDateStr();
     document.getElementById('vf-worker').value = c.worker||'';
     document.getElementById('vf-risk').value = c.risk||'watch';
     document.getElementById('vf-plan-short-status').value = '新增';
@@ -2863,16 +2878,25 @@ function submitVisitForm(){
 
   if(visitFormIdx !== null){
     c.history[visitFormIdx] = record;
-    showToast('✓ 訪視紀錄已更新');
   } else {
-    c.history.unshift(record);
-    c.lastVisit = date;
-    c.risk = record.risk;
-    showToast('✓ 已新增訪視紀錄');
+    c.history.push(record);
   }
+  syncCaseFromHistory(c);
+  showToast(visitFormIdx !== null ? '✓ 訪視紀錄已更新' : '✓ 已新增訪視紀錄');
   closeVisitForm();
   activeCaseId = c.id;
   refreshAll();
+}
+
+// 讓訪視紀錄依日期由新到舊排列，並以最新一筆更新「上次訪視」與風險等級
+function syncCaseFromHistory(c){
+  c.history.sort((a, b) => String(b.date).localeCompare(String(a.date)));
+  if(c.history.length){
+    c.lastVisit = c.history[0].date;
+    c.risk = c.history[0].risk;
+  } else {
+    c.lastVisit = c.open;
+  }
 }
 
 function editCurrentRecord(){
@@ -2886,10 +2910,7 @@ function deleteCurrentRecord(){
   if(!c) return;
   if(!confirm('確定要刪除這筆訪視紀錄嗎？此動作無法復原。')) return;
   c.history.splice(currentRecordIdx, 1);
-  if(c.history.length>0){
-    c.lastVisit = c.history[0].date;
-    c.risk = c.history[0].risk;
-  }
+  syncCaseFromHistory(c);
   closeRecordDetail();
   showToast('✓ 已刪除訪視紀錄');
   activeCaseId = c.id;
@@ -2907,20 +2928,7 @@ function toggleSelect(id){
   if(activeCaseId===id){
     document.getElementById('d-route-txt').textContent = selected.has(id)?'✓ 已加入路線（點擊移除）':'＋ 加入今日路線';
   }
-  CASES.forEach(c => {
-    const m = markers[c.id];
-    const bg = markerBackground(c);
-    const inRoute = selected.has(c.id);
-    const html = `<div style="
-      width:${inRoute?20:18}px;height:${inRoute?20:18}px;border-radius:50%;
-      background:${bg};
-      border:${inRoute?'3px solid #2563eb':'2.5px solid white'};
-      box-shadow:${inRoute?'0 0 0 2px rgba(37,99,235,.3),':''}0 2px 6px rgba(0,0,0,.25);
-      transition:all .15s;
-    "></div>`;
-    const icon = L.divIcon({html, iconSize:[inRoute?20:18,inRoute?20:18], iconAnchor:[inRoute?10:9,inRoute?10:9], className:''});
-    m.setIcon(icon);
-  });
+  CASES.forEach(c => { if(markers[c.id]) markers[c.id].setIcon(markerIcon(c)); });
 }
 
 function toggleRoute(){
@@ -2988,7 +2996,7 @@ function populateWorkerFilter(){
   const workers = Array.from(new Set(CASES.map(c=>c.worker).filter(Boolean))).sort();
   const prevValue = sel.value || 'all';
   sel.innerHTML = '<option value="all">全部社工</option>' +
-    workers.map(w => `<option value="${w}">${w}</option>`).join('');
+    workers.map(w => `<option value="${escHtml(w)}">${escHtml(w)}</option>`).join('');
   sel.value = workers.includes(prevValue) ? prevValue : 'all';
 }
 
