@@ -2,7 +2,7 @@
 // 用途：快取「網頁本身」讓已安裝的 App 離線也能打開；
 // 地圖圖層與 Google Maps 仍需要網路連線才能顯示。
 
-const CACHE_NAME = 'casemap-app-v4';
+const CACHE_NAME = 'casemap-app-v5';
 const APP_SHELL = [
   './index.html',
   './manifest.json',
