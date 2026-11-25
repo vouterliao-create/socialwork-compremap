@@ -2018,7 +2018,7 @@ function renderGenogram(g){
     const topY = Math.min(...pts.map(p=>p.y)) - R - 4;
     const labelP = pts.reduce((a,p)=> (p.y<a.y || (p.y===a.y && p.x<a.x)) ? p : a, pts[0]);
     householdCircle =
-      `<defs>
+      `<g pointer-events="none"><defs>
         <mask id="${hid}o" maskUnits="userSpaceOnUse" x="0" y="0" width="${width}" height="${height}">
           <g>${draw(R*2+4,'#fff')}</g><g>${draw(R*2,'#000')}</g>
         </mask>
@@ -2028,7 +2028,7 @@ function renderGenogram(g){
       </defs>
       <rect x="0" y="0" width="${width}" height="${height}" fill="rgba(148,163,184,0.12)" mask="url(#${hid}f)"/>
       <rect x="0" y="0" width="${width}" height="${height}" fill="#64748b" mask="url(#${hid}o)"/>
-      <text x="${labelP.x}" y="${Math.max(11, topY-3)}" text-anchor="middle" font-size="10" fill="#475569" font-weight="700">同住</text>`;
+      <text x="${labelP.x}" y="${Math.max(11, topY-3)}" text-anchor="middle" font-size="10" fill="#475569" font-weight="700">同住</text></g>`;
   }
 
   // 同一人若有多段「無登記配偶」關係（b為null，例如未婚生子、多任伴侶），
