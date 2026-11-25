@@ -267,7 +267,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
 .plan-text{font-size:11.5px;color:var(--text);line-height:1.6;}
 
 /* Genogram */
-.geno-rel{max-width:130px}.geno-rel-index{font-size:11px;font-weight:700;color:#2563eb;padding:0 6px}
 .geno-wrap{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;}
 .geno-preview-wrap{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;min-height:60px;}
 .geno-legend{display:flex;flex-wrap:wrap;gap:11px;font-size:9.5px;color:var(--muted);padding-top:2px;}
@@ -688,14 +687,13 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
       <div style="font-size:10px;color:var(--muted);margin-bottom:4px" id="cf-pick-hint">點擊按鈕後，直接在地圖上點一下即可帶入座標（建議先套用地理模糊化再存正式資料）</div>
 
       <div class="form-section-title">家系圖</div>
-      <div class="geno-builder-hint">只要一次填寫：每位家人填姓名並選「與案主的關係」，系統就會自動畫出關係線與家系圖。勾選「同住」的成員會被圈在同一個圈裡。</div>
+      <div class="geno-builder-hint">填寫下方成員與關係，儲存時會自動排版產生家系圖（不需要自己算座標）。勾選「同住」的成員，家系圖上會用虛線圈起來。</div>
 
       <div id="cf-geno-members-list"></div>
       <button type="button" class="geno-add-btn" onclick="addGenoMember()">＋ 新增家庭成員</button>
 
-      <details style="margin:6px 0"><summary style="font-size:11px;color:var(--muted);cursor:pointer">進階：手動補充其他關係（一般不需要）</summary>
       <div id="cf-geno-unions-list"></div>
-      <button type="button" class="geno-add-btn" onclick="addGenoUnion()">＋ 新增關係（婚姻／離婚／同居等）</button></details>
+      <button type="button" class="geno-add-btn" onclick="addGenoUnion()">＋ 新增關係（婚姻／離婚／同居等）</button>
 
       <div class="form-section-title">家系圖預覽</div>
       <div class="geno-preview-wrap" id="cf-geno-preview">
@@ -2364,72 +2362,6 @@ function memberOptions(selectedId, allowNone){
 }
 
 // 即時預覽：用目前建構工具裡的成員/關係資料，直接跑一次自動排版並畫出來
-
-// ===== 與案主關係 → 自動產生家系圖關係線 =====
-const GENO_REL_LABELS = [
-  ['', '— 與案主的關係 —'],
-  ['spouse','配偶'],['exspouse','前配偶（離婚）'],['partner','同居人／伴侶'],
-  ['child','子女'],['childspouse','子女的配偶'],['grandchild','孫子女'],
-  ['father','父親'],['mother','母親'],['sibling','兄弟姊妹（同父母）'],
-  ['pgf','祖父（父方）'],['pgm','祖母（父方）'],['mgf','外祖父（母方）'],['mgm','外祖母（母方）'],
-  ['other','其他（不畫關係線）']
-];
-function relOptions(cur){
-  return GENO_REL_LABELS.map(([v,l])=>`<option value="${v}" ${(cur||'')===v?'selected':''}>${l}</option>`).join('');
-}
-function relRef2Select(m){
-  let label='', list=[];
-  const byRel = r => cfGenoMembers.filter(x=>x.rel===r);
-  if(m.rel==='child'){ label='另一位家長'; list=cfGenoMembers.filter(x=>['spouse','exspouse','partner'].includes(x.rel)); }
-  else if(m.rel==='childspouse'||m.rel==='grandchild'){ label = m.rel==='childspouse'?'是誰的配偶':'是誰的孩子'; list=byRel('child'); }
-  else return '';
-  const opts = `<option value="">${m.rel==='child'?'（自動／無）':'（請選擇）'}</option>` + list.map(x=>`<option value="${x.id}" ${m.rel2===x.id?'selected':''}>${escHtml(x.name||'未命名')}</option>`).join('');
-  return `<select class="geno-rel" title="${label}" onchange="updateGenoMemberField('${m.id}','rel2',this.value)">${opts.replace('<option value="">','<option value="">'+label+'：')}</select>`;
-}
-function setGenoRel(id,val){
-  const m = cfGenoMembers.find(x=>x.id===id); if(!m) return;
-  m.rel = val; m.rel2 = '';
-  if(['father','pgf','mgf','spouse'].includes(val) && m.gender!=='M') m.gender='M';
-  if(['mother','pgm','mgm'].includes(val) && m.gender!=='F') m.gender='F';
-  renderGenoBuilder();
-}
-// 依「與案主關係」推出關係線；再合併進階區手動加的關係
-function deriveGenoUnions(){
-  const M = cfGenoMembers, idx = M.find(m=>m.isIndex);
-  if(!idx) return [];
-  const out = [], first = r => M.find(m=>m.rel===r), all = r => M.filter(m=>m.rel===r);
-  const partners = M.filter(m=>['spouse','exspouse','partner'].includes(m.rel));
-  const typeOf = {spouse:'married', exspouse:'divorced', partner:'partner'};
-  // 與案主的伴侶與子女
-  const kids = all('child');
-  const kidsOf = pid => kids.filter(k => k.rel2===pid || (!k.rel2 && partners.length===1 && partners[0].id===pid)).map(k=>k.id);
-  partners.forEach(p=> out.push({id:'auto-p-'+p.id, a:idx.id, b:p.id, type:typeOf[p.rel], children:kidsOf(p.id)}));
-  const orphanKids = kids.filter(k=>!(k.rel2 && partners.some(p=>p.id===k.rel2)) && !(partners.length===1)).map(k=>k.id);
-  if(orphanKids.length) out.push({id:'auto-solo', a:idx.id, b:null, type:'partner', children:orphanKids});
-  // 子女的配偶與孫子女
-  kids.forEach(k=>{
-    const sp = all('childspouse').find(x=>x.rel2===k.id);
-    const gk = all('grandchild').filter(x=>x.rel2===k.id).map(x=>x.id);
-    if(sp) out.push({id:'auto-c-'+k.id, a:k.id, b:sp.id, type:'married', children:gk});
-    else if(gk.length) out.push({id:'auto-c-'+k.id, a:k.id, b:null, type:'partner', children:gk});
-  });
-  // 父母與手足
-  const fa = first('father'), mo = first('mother');
-  const sibs = all('sibling').map(x=>x.id);
-  if(fa||mo) out.push({id:'auto-par', a:(fa||mo).id, b: fa&&mo ? mo.id : null, type:'married', children:[idx.id, ...sibs]});
-  // 祖父母
-  const gp = (g1,g2,child)=>{ const a=first(g1), b=first(g2); if(!(a||b)||!child) return;
-    out.push({id:'auto-g-'+g1, a:(a||b).id, b:(a&&b)?b.id:null, type:'married', children:[child.id]}); };
-  gp('pgf','pgm',fa); gp('mgf','mgm',mo);
-  return out;
-}
-function effectiveGenoUnions(){
-  const auto = deriveGenoUnions();
-  const key = u => [u.a,u.b||''].sort().join('|');
-  const have = new Set(auto.map(key));
-  return auto.concat(cfGenoUnions.filter(u=>!have.has(key(u))));
-}
-
 function renderGenoPreview(){
   const el = document.getElementById('cf-geno-preview');
   if(!el) return;
@@ -2438,7 +2370,7 @@ function renderGenoPreview(){
     return;
   }
   try{
-    const laidOut = autoLayoutGenogram(cfGenoMembers, effectiveGenoUnions());
+    const laidOut = autoLayoutGenogram(cfGenoMembers, cfGenoUnions);
     el.innerHTML = renderGenogram(laidOut);
   }catch(e){
     el.innerHTML = '<div class="geno-empty">預覽產生失敗，請檢查成員與關係設定</div>';
@@ -2451,8 +2383,7 @@ function renderGenoBuilder(){
   if(!mEl) return;
   mEl.innerHTML = cfGenoMembers.length ? cfGenoMembers.map(m => `
     <div class="geno-row">
-      <input value="${escHtml(m.name)}" placeholder="姓名或稱謂，例如：王媽媽" oninput="updateGenoMemberField('${m.id}','name',this.value)">
-      ${m.isIndex ? '<span class="geno-rel-index">本案當事人</span>' : `<select class="geno-rel" onchange="setGenoRel('${m.id}',this.value)">${relOptions(m.rel)}</select>${relRef2Select(m)}`}
+      <input value="${escHtml(m.name)}" placeholder="稱謂，例如：父親" oninput="updateGenoMemberField('${m.id}','name',this.value)">
       <select onchange="updateGenoMemberField('${m.id}','gender',this.value)">
         <option value="F" ${m.gender==='F'?'selected':''}>女</option>
         <option value="M" ${m.gender==='M'?'selected':''}>男</option>
@@ -2495,8 +2426,8 @@ function removeGenoMember(id){
   renderGenoBuilder();
 }
 function setGenoIndex(id){
-  cfGenoMembers.forEach(m=>{ m.isIndex = (m.id===id); if(m.isIndex){ m.rel=''; m.rel2=''; } });
-  renderGenoBuilder();
+  cfGenoMembers.forEach(m=>{ m.isIndex = (m.id===id); });
+  renderGenoPreview();
 }
 function addGenoUnion(){
   if(cfGenoMembers.length===0){ showToast('⚠ 請先新增至少一位成員'); return; }
@@ -2819,7 +2750,7 @@ function submitCaseForm(){
     address: document.getElementById('cf-address').value.trim(),
     lat: parseFloat(document.getElementById('cf-lat').value),
     lon: parseFloat(document.getElementById('cf-lon').value),
-    genogram: cfGenoMembers.length > 0 ? autoLayoutGenogram(cfGenoMembers, effectiveGenoUnions()) : null,
+    genogram: cfGenoMembers.length > 0 ? autoLayoutGenogram(cfGenoMembers, cfGenoUnions) : null,
   };
 
   const isNewCase = !caseFormEditId;
