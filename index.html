@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>社工個案地理管理系統｜概念示範版 v4</title>
+<title>社工個案地理管理系統｜概念示範版 v5</title>
 
 <!-- PWA：讓手機瀏覽器可以「加入主畫面」，像 App 一樣開啟 -->
 <link rel="manifest" href="manifest.json">
@@ -267,7 +267,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
 .plan-text{font-size:11.5px;color:var(--text);line-height:1.6;}
 
 /* Genogram */
-.geno-wrap{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;}
+.geno-wrap svg{display:block;margin:0 auto;border-radius:6px;}
+.geno-wrap{overflow:auto;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;}
 .geno-preview-wrap{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;min-height:60px;}
 .geno-legend{display:flex;flex-wrap:wrap;gap:11px;font-size:9.5px;color:var(--muted);padding-top:2px;}
 .gl-item{display:flex;align-items:center;gap:4px;}
@@ -277,7 +278,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
 .geno-empty{text-align:center;color:var(--muted);font-size:12px;line-height:1.9;padding:36px 14px;background:var(--bg);border:1px dashed var(--border);border-radius:10px;}
 
 /* Leaflet tooltip override for history hover card */
-.leaflet-tooltip.hist-leaflet-tip{background:white;border:1px solid var(--border);border-radius:10px;padding:10px 12px;box-shadow:0 6px 20px rgba(0,0,0,.14);opacity:1 !important;}
+.leaflet-tooltip.hist-leaflet-tip{white-space:normal;background:white;border:1px solid var(--border);border-radius:10px;padding:10px 12px;box-shadow:0 6px 20px rgba(0,0,0,.14);opacity:1 !important;}
 .leaflet-tooltip.hist-leaflet-tip::before{border-top-color:white;}
 
 /* ═══════════════════════════════
@@ -342,6 +343,29 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
 .geno-empty-hint{font-size:10.5px;color:var(--muted);text-align:center;padding:14px;border:1px dashed var(--border);border-radius:7px;background:var(--bg);}
 .geno-add-btn{width:100%;padding:7px;border-radius:6px;border:1px dashed #93c5fd;background:var(--blue-bg);color:var(--blue);font-family:var(--font);font-size:11px;font-weight:600;cursor:pointer;margin-bottom:10px;}
 .geno-add-btn:hover{background:#dbeafe;}
+.fam-top{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin-bottom:8px;}
+.fam-f{display:flex;flex-direction:column;gap:3px;font-size:10px;color:var(--muted);flex:1 1 160px;}
+.fam-f select,.fam-f input{padding:5px 7px;border:1px solid var(--border);border-radius:5px;font-family:var(--font);font-size:11px;background:white;width:100%;min-width:0;}
+.fam-row{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px;margin-bottom:7px;}
+.fam-l1{display:grid;grid-template-columns:20px 1.4fr 1fr 24px;gap:5px;align-items:center;}
+.fam-l1.noof{grid-template-columns:20px 1fr 24px;}
+.fam-l1 select,.fam-l2 select,.fam-more select,.fam-l2 input[type=text],.fam-l2 input[type=number],.fam-more input[type=text]{padding:5px 6px;border:1px solid var(--border);border-radius:5px;font-family:var(--font);font-size:11px;background:white;width:100%;min-width:0;}
+.fam-num{font-size:10px;color:var(--muted);text-align:center;}
+.fam-derived{font-size:10px;color:var(--blue);margin:3px 0 0 25px;min-height:12px;}
+.fam-l2{display:grid;grid-template-columns:70px 56px auto auto 1fr;gap:5px;align-items:center;margin-top:6px;}
+.fam-tog{background:none;border:none;color:var(--muted);font-size:10px;padding:0;margin:5px 0 0 25px;cursor:pointer;font-family:var(--font);}
+.fam-tog:hover{color:var(--blue);}
+.fam-more{margin-top:6px;padding-top:6px;border-top:1px dashed var(--border);display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.fam-more.hide{display:none;}
+.fam-more label.fam-f{flex:none;}
+.fam-quick{display:flex;flex-wrap:wrap;gap:5px;margin:6px 0 8px;}
+.fam-quick button{font-family:var(--font);font-size:10.5px;padding:3px 9px;border-radius:14px;border:1px solid var(--border);background:white;color:var(--text);cursor:pointer;}
+.fam-quick button:hover{border-color:#93c5fd;color:var(--blue);}
+.fam-warn{margin-bottom:8px;background:#fffbeb;border:1px solid #fde68a;color:#92400e;border-radius:7px;padding:7px 10px;font-size:10.5px;line-height:1.6;}
+.fam-warn ul{margin:2px 0 0;padding-left:16px;}
+#cf-geno-preview{overflow:auto;max-height:420px;}
+#cf-geno-preview svg{max-width:none !important;}
+@media(max-width:520px){.fam-l2{grid-template-columns:70px 56px 1fr 1fr}.fam-l2 .fam-note{grid-column:1/-1}}
 
 /* 社福資源清單 */
 .resource-list{display:flex;flex-direction:column;gap:6px;}
@@ -365,7 +389,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
 <!-- TOP BAR -->
 <div class="topbar">
   <div class="topbar-logo">社工個案<span>管理系統</span></div>
-  <div class="topbar-badge">⚠ 概念示範版 v4 · 虛構資料</div>
+  <div class="topbar-badge">⚠ 概念示範版 v5 · 虛構資料</div>
   <div class="worker-filter-wrap">
     <label for="worker-filter" class="worker-filter-label">社工</label>
     <select id="worker-filter" onchange="setWorkerFilter(this.value)">
@@ -613,7 +637,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
 
 <!-- CASE FORM MODAL（新增／編輯個案） -->
 <div class="modal-overlay" id="case-form-overlay" onclick="if(event.target===this)closeCaseForm()">
-  <div class="modal-card" style="width:480px">
+  <div class="modal-card" style="width:560px">
     <div class="modal-top">
       <div class="modal-head">
         <div class="modal-head-l">
@@ -686,16 +710,24 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
       </div>
       <div style="font-size:10px;color:var(--muted);margin-bottom:4px" id="cf-pick-hint">點擊按鈕後，直接在地圖上點一下即可帶入座標（建議先套用地理模糊化再存正式資料）</div>
 
-      <div class="form-section-title">家系圖</div>
-      <div class="geno-builder-hint">填寫下方成員與關係，儲存時會自動排版產生家系圖（不需要自己算座標）。勾選「同住」的成員，家系圖上會用虛線圈起來。</div>
-
-      <div id="cf-geno-members-list"></div>
-      <button type="button" class="geno-add-btn" onclick="addGenoMember()">＋ 新增家庭成員</button>
-
-      <div id="cf-geno-unions-list"></div>
-      <button type="button" class="geno-add-btn" onclick="addGenoUnion()">＋ 新增關係（婚姻／離婚／同居等）</button>
+      <div class="form-section-title">家系圖（只填關係，自動長出圖）</div>
+      <div class="geno-builder-hint">每位家人填一列：選「他是案主的什麼人」、年齡，並勾選是否同住，下方家系圖就會自動接線、排好位置。案主本人的性別與年齡直接用上面已填的欄位，不用再填一次。三代、伯叔姑舅姨、堂表親、姪甥、媳婿、繼親、同父異母手足等都可以填；沒填到的上一代（例如填了叔叔卻沒填祖父母），系統會用灰色虛線「未建檔」自動補上。</div>
+      <div class="fam-top">
+        <label class="fam-f">案主的父母目前
+          <select id="cf-fam-pstat" onchange="famParents=this.value;famRefresh()">
+            <option value="married">婚姻中（同一個家）</option>
+            <option value="divorced">已離婚</option>
+            <option value="separated">分居中</option>
+            <option value="partner">同居／未婚</option>
+          </select></label>
+        <label class="geno-chk" style="padding-bottom:6px"><input type="checkbox" id="cf-fam-ixco" onchange="famIxCo=this.checked;famRefresh()">案主本人與家人同住</label>
+      </div>
+      <div id="cf-fam-rows"></div>
+      <div class="fam-quick" id="cf-fam-quick"></div>
+      <button type="button" class="geno-add-btn" onclick="famAddRow('')">＋ 新增一位親屬</button>
 
       <div class="form-section-title">家系圖預覽</div>
+      <div id="cf-fam-warn" class="fam-warn" hidden></div>
       <div class="geno-preview-wrap" id="cf-geno-preview">
         <div class="geno-empty">尚未新增任何成員，畫面會在你新增成員後即時顯示</div>
       </div>
@@ -804,6 +836,808 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
 <div class="toast" id="toast"></div>
 
 <script>
+/* ===== 家系圖自動生成引擎：只存關係，人物／連線／位置自動推算 ===== */
+/*!
+ * 家系圖自動生成引擎 genogram-engine.js
+ * ------------------------------------------------------------
+ * 設計重點（對應「論文」的做法）：
+ *   1. 只存「關係」，不存座標：社工開案時填「這個人是案主的什麼人、是否同住」，
+ *      人物、婚姻、子女連線、位置全部由程式自動推算。
+ *   2. 婚姻群組（論文的 Concrete Node）：有婚姻/同居關係的人併成一組，
+ *      多次婚姻時「男左女右、前任放另一側」。
+ *   3. 世代層級：由祖先往下算，沒有上層的人往下拉到「最小子代層 - 1」。
+ *   4. 排版：後序走訪（先排子孫、再把父母置中於子女上方），
+ *      同一列以「最右邊界」避免重疊，必要時連同子樹一起右移。
+ *
+ * 用法：
+ *   const model = GENO.build({index:{gender:'F',age:8}, parentsStatus:'divorced',
+ *                              relatives:[{rel:'father',age:35},{rel:'mother',age:33,coRes:true}]});
+ *   const svg = GENO.toSVG(model);       // 回傳 SVG 字串
+ *   GENO.render(input, element);          // 一步到位：畫進網頁元素
+ */
+(function (root, factory) {
+  if (typeof module === 'object' && module.exports) module.exports = factory();
+  else root.GENO = factory();
+})(typeof self !== 'undefined' ? self : this, function () {
+  'use strict';
+
+  /* ---------------- 設定 ---------------- */
+  const CFG = {
+    COLW: 104, ROWH: 136, SYM: 32, PAD: 60, TOP: 24, GAP: 0.45,
+    stroke: '#2b3a4a', index: '#1b6ac9', dead: '#d33', implied: '#9aa3ad',
+    bg: '#ffffff', halo: '#ffffff', text: '#1f2933', sub: '#52606d', note: '#7b8794',
+    household: '#c28a1b',
+    font: "'Noto Sans CJK TC','PingFang TC','Microsoft JhengHei','Noto Sans TC',sans-serif",
+    tie: { close: '#2e9e5b', distant: '#8a94a0', conflict: '#d33', cutoff: '#7a3fb0' }
+  };
+
+  /* ---------------- 關係目錄（表單與引擎共用） ----------------
+   * kind：parent=對方是「某人的父母」、child=「某人的子女」、
+   *       sibling=「某人的兄弟姊妹」、partner=「某人的伴侶」、none=無親屬連線
+   * anchor：以誰為基準。'index'=案主；'father'/'mother'/'spouse'=案主的父/母/配偶（沒填會自動補「未建檔」）；
+   *         'of'=由使用者在表單指定（填某一列的 id）
+   */
+  const REL = {
+    father:    { grp: 'core', zh: '父親',           kind: 'parent',  anchor: 'index',  g: 'M', side: 'F' },
+    mother:    { grp: 'core', zh: '母親',           kind: 'parent',  anchor: 'index',  g: 'F', side: 'M' },
+    spouse:    { grp: 'core', zh: '配偶（現任）',   kind: 'partner', anchor: 'index',  ptype: 'married',   side: 'C' },
+    partner:   { grp: 'core', zh: '同居伴侶',       kind: 'partner', anchor: 'index',  ptype: 'partner',   side: 'C' },
+    separated: { grp: 'core', zh: '分居中的配偶',   kind: 'partner', anchor: 'index',  ptype: 'separated', side: 'C' },
+    exspouse:  { grp: 'core', zh: '前配偶（離婚）', kind: 'partner', anchor: 'index',  ptype: 'divorced',  side: 'C' },
+    son:       { grp: 'core', zh: '兒子',           kind: 'child',   anchor: 'index',  g: 'M', side: 'C' },
+    daughter:  { grp: 'core', zh: '女兒',           kind: 'child',   anchor: 'index',  g: 'F', side: 'C' },
+    brother:   { grp: 'core', zh: '兄弟',           kind: 'sibling', anchor: 'index',  g: 'M', side: 'C' },
+    sister:    { grp: 'core', zh: '姊妹',           kind: 'sibling', anchor: 'index',  g: 'F', side: 'C' },
+    stepfather:{ grp: 'core', zh: '繼父（母親的伴侶）', kind: 'partner', anchor: 'mother', g: 'M', ptype: 'married', side: 'M' },
+    stepmother:{ grp: 'core', zh: '繼母（父親的伴侶）', kind: 'partner', anchor: 'father', g: 'F', ptype: 'married', side: 'F' },
+
+    gf_f:      { grp: 'ext', zh: '祖父（父親的父親）',   kind: 'parent',  anchor: 'father', g: 'M', side: 'F' },
+    gm_f:      { grp: 'ext', zh: '祖母（父親的母親）',   kind: 'parent',  anchor: 'father', g: 'F', side: 'F' },
+    gf_m:      { grp: 'ext', zh: '外祖父（母親的父親）', kind: 'parent',  anchor: 'mother', g: 'M', side: 'M' },
+    gm_m:      { grp: 'ext', zh: '外祖母（母親的母親）', kind: 'parent',  anchor: 'mother', g: 'F', side: 'M' },
+    uncle_f:   { grp: 'ext', zh: '伯父／叔叔（父親的兄弟）', kind: 'sibling', anchor: 'father', g: 'M', side: 'F' },
+    aunt_f:    { grp: 'ext', zh: '姑姑（父親的姊妹）',   kind: 'sibling', anchor: 'father', g: 'F', side: 'F' },
+    uncle_m:   { grp: 'ext', zh: '舅舅（母親的兄弟）',   kind: 'sibling', anchor: 'mother', g: 'M', side: 'M' },
+    aunt_m:    { grp: 'ext', zh: '阿姨（母親的姊妹）',   kind: 'sibling', anchor: 'mother', g: 'F', side: 'M' },
+    fil:       { grp: 'ext', zh: '公公／岳父（配偶的父親）', kind: 'parent', anchor: 'spouse', g: 'M', side: 'S' },
+    mil:       { grp: 'ext', zh: '婆婆／岳母（配偶的母親）', kind: 'parent', anchor: 'spouse', g: 'F', side: 'S' },
+
+    c_son:     { grp: 'rel', zh: '○○的兒子',   kind: 'child',   anchor: 'of', g: 'M' },
+    c_dau:     { grp: 'rel', zh: '○○的女兒',   kind: 'child',   anchor: 'of', g: 'F' },
+    c_spouse:  { grp: 'rel', zh: '○○的配偶／伴侶', kind: 'partner', anchor: 'of', ptype: 'married' },
+    c_father:  { grp: 'rel', zh: '○○的父親',   kind: 'parent',  anchor: 'of', g: 'M' },
+    c_mother:  { grp: 'rel', zh: '○○的母親',   kind: 'parent',  anchor: 'of', g: 'F' },
+    c_brother: { grp: 'rel', zh: '○○的兄弟',   kind: 'sibling', anchor: 'of', g: 'M' },
+    c_sister:  { grp: 'rel', zh: '○○的姊妹',   kind: 'sibling', anchor: 'of', g: 'F' },
+
+    other:     { grp: 'other', zh: '同住的非親屬（室友、朋友等）', kind: 'none', anchor: 'index' }
+  };
+
+  const FIXED = { father: '父親', mother: '母親', partner: '同居伴侶', separated: '分居配偶',
+                  exspouse: '前配偶', stepfather: '繼父', stepmother: '繼母', other: '同住者' };
+  const TYPE_ORDER = { married: 0, partner: 1, separated: 2, divorced: 3 };
+  const SIDE_RANK = { F: 0, C: 1, M: 2, S: 3 };
+  const num = v => (v === '' || v == null || isNaN(+v)) ? null : +v;
+
+  /* ============================================================
+   *  build：關係 → 人物 / 婚姻 / 親子 / 層級 / 座標
+   * ============================================================ */
+  function build(input) {
+    input = input || {};
+    const warnings = [];
+    const persons = [];
+    let seq = 0;
+    const mk = o => {
+      const p = Object.assign({ gender: 'U', age: null, deceased: false, coRes: false, implied: false,
+        side: null, note: '', custom: '', tie: '', _n: seq++ }, o);
+      persons.push(p); return p;
+    };
+
+    /* ---- 1. 建立案主與每一列親屬 ---- */
+    const ix = input.index || {};
+    const idx = mk({ id: 'index', gender: ix.gender || 'U', age: num(ix.age), deceased: !!ix.deceased,
+      coRes: ix.coRes !== false, note: ix.note || '', custom: ix.label || '', isIndex: true, rel: 'index', side: 'C' });
+
+    const rows = [], rowP = {};
+    (input.relatives || []).forEach((r, i) => {
+      const def = REL[r.rel];
+      if (!def) { warnings.push('不認得的關係：' + r.rel); return; }
+      const id = r.id || ('r' + i);
+      const p = mk({ id, gender: r.gender || def.g || 'U', age: num(r.age), deceased: !!r.deceased,
+        coRes: !!r.coRes, note: r.note || '', custom: r.label || '', rel: r.rel,
+        rowSide: def.side || null, tie: r.tie || '', row: r });
+      rows.push({ r, def, p }); rowP[id] = p;
+    });
+
+    /* ---- 2. 邊：親子邊 / 伴侶邊 ---- */
+    const pe = [];   // {p:父母, c:子女, adopted}
+    const pa = [];   // {a,b,type,explicit}
+    const addPE = (p, c, adopted) => {
+      if (!p || !c || p === c) return;
+      if (pe.some(e => e.p === p && e.c === c)) return;
+      pe.push({ p, c, adopted: !!adopted });
+    };
+    const addPA = (a, b, type, explicit) => {
+      if (!a || !b || a === b) return;
+      const e = pa.find(e => (e.a === a && e.b === b) || (e.a === b && e.b === a));
+      if (e) { if (explicit) { e.type = type; e.explicit = true; } return; }
+      pa.push({ a, b, type: type || 'married', explicit: !!explicit });
+    };
+
+    /* ---- 3. 代號解析：'father'/'mother'/'spouse' 沒填時自動補「未建檔」 ---- */
+    const sym = {};
+    const parentOfIndex = g => {
+      const k = g === 'M' ? 'father' : 'mother';
+      if (sym[k]) return sym[k];
+      const row = rows.find(x => x.r.rel === k);
+      if (row) return (sym[k] = row.p);
+      const p = mk({ id: 'imp_' + k, gender: g, implied: true, rel: k, rowSide: g === 'M' ? 'F' : 'M' });
+      sym[k] = p; addPE(p, idx, false); return p;
+    };
+    const spouseP = () => {
+      if (sym.spouse) return sym.spouse;
+      for (const k of ['spouse', 'partner', 'separated', 'exspouse']) {
+        const row = rows.find(x => x.r.rel === k);
+        if (row) return (sym.spouse = row.p);
+      }
+      const p = mk({ id: 'imp_spouse', gender: idx.gender === 'M' ? 'F' : idx.gender === 'F' ? 'M' : 'U',
+        implied: true, rel: 'spouse', rowSide: 'C' });
+      sym.spouse = p; addPA(idx, p, 'married', true); return p;
+    };
+    const anchorP = key => {
+      if (!key || key === 'index') return idx;
+      if (key === 'father') return parentOfIndex('M');
+      if (key === 'mother') return parentOfIndex('F');
+      if (key === 'spouse') return spouseP();
+      return rowP[key] || null;
+    };
+    const akey = (def, r) => def.anchor === 'of' ? r.of : def.anchor;
+
+    /* 陣營（父系 F / 母系 M / 姻親 S / 中心 C），只用來決定左右排列順序 */
+    const sideOf = (p, depth) => {
+      depth = depth || 0;
+      if (p.side) return p.side;
+      if (depth > 20) return 'C';
+      if (p.rowSide) return (p.side = p.rowSide);
+      if (p.row) {
+        const def = REL[p.rel], k = akey(def, p.row);
+        if (!k || k === 'index' || k === 'spouse') return (p.side = 'C');
+        if (k === 'father') return (p.side = 'F');
+        if (k === 'mother') return (p.side = 'M');
+        if (rowP[k] && rowP[k] !== p) return (p.side = sideOf(rowP[k], depth + 1));
+      }
+      return (p.side = 'C');
+    };
+
+    /* ---- 4. 第一階段：父母類（祖父母、姻親父母、某人的父母） ---- */
+    rows.filter(x => x.def.kind === 'parent').forEach(({ r, def, p }) => {
+      const a = anchorP(akey(def, r));
+      if (!a) { warnings.push('「' + (def.zh || r.rel) + '」沒有指定對象，已略過'); return; }
+      addPE(p, a, r.adopted);
+    });
+    const statusType = { married: 'married', divorced: 'divorced', separated: 'separated', partner: 'partner' }[input.parentsStatus] || 'married';
+    const linkIndexParents = () => {
+      const f = pe.find(e => e.c === idx && e.p.gender === 'M'), m = pe.find(e => e.c === idx && e.p.gender === 'F');
+      if (f && m) addPA(f.p, m.p, statusType, true);
+    };
+    linkIndexParents();
+
+    /* ---- 5. 第二階段：伴侶類 ---- */
+    rows.filter(x => x.def.kind === 'partner').forEach(({ r, def, p }) => {
+      const a = anchorP(akey(def, r));
+      if (!a) { warnings.push('「' + (def.zh || r.rel) + '」沒有指定對象，已略過'); return; }
+      addPA(a, p, r.stype || def.ptype || 'married', true);
+    });
+
+    const partnersOf = x => pa.filter(e => e.a === x || e.b === x)
+      .map(e => ({ q: e.a === x ? e.b : e.a, type: e.type }));
+    const pickOther = (x, exclude) => {
+      const list = partnersOf(x).filter(o => !(exclude || []).includes(o.q))
+        .sort((u, v) => (TYPE_ORDER[u.type] - TYPE_ORDER[v.type]) || (u.q._n - v.q._n));
+      return list.length ? list[0].q : null;
+    };
+
+    /* ---- 6. 第三階段：兄弟姊妹類（含伯叔姑舅姨），依賴順序處理 ---- */
+    const parentsOfPerson = a => pe.filter(e => e.c === a).map(e => e.p);
+    const ensureParents = a => {
+      let ps = parentsOfPerson(a);
+      if (ps.length) return ps;
+      const s = sideOf(a);
+      const f = mk({ id: 'imp_f_' + a.id, gender: 'M', implied: true, rel: 'father_of', rowSide: s });
+      const m = mk({ id: 'imp_m_' + a.id, gender: 'F', implied: true, rel: 'mother_of', rowSide: s });
+      addPE(f, a, false); addPE(m, a, false); addPA(f, m, 'married', false);
+      return [f, m];
+    };
+    let pend = rows.filter(x => x.def.kind === 'sibling'), guard = 0;
+    const isPendAnchor = (item, list) => {
+      const k = akey(item.def, item.r);
+      return !!rowP[k] && list.some(o => o.p === rowP[k]);
+    };
+    while (pend.length && guard++ < 60) {
+      let ready = pend.filter(it => !isPendAnchor(it, pend));
+      if (!ready.length) { warnings.push('兄弟姊妹的指定對象互相循環，已強制處理'); ready = pend.slice(); }
+      ready.forEach(({ r, def, p }) => {
+        const a = anchorP(akey(def, r));
+        if (!a) { warnings.push('「' + (def.zh || r.rel) + '」沒有指定對象，已略過'); return; }
+        if (pe.some(e => e.c === p)) { warnings.push('「' + (r.label || def.zh) + '」已有父母，兄弟姊妹關係被略過'); return; }
+        const pa0 = ensureParents(a);
+        if (r.half === 'f' || r.half === 'm') {
+          const want = r.half === 'f' ? 'M' : 'F';
+          let shared = pa0.find(x => x.gender === want);
+          if (!shared) {
+            shared = mk({ id: 'imp_h_' + a.id + '_' + want, gender: want, implied: true,
+              rel: want === 'M' ? 'father_of' : 'mother_of', rowSide: sideOf(a) });
+            addPE(shared, a, false);
+          }
+          addPE(shared, p, r.adopted);
+          let other = r.with ? anchorP(r.with) : pickOther(shared, pa0.filter(x => x !== shared));
+          if (other) { addPE(other, p, r.adopted); addPA(shared, other, 'married', false); }
+        } else {
+          pa0.forEach(x => addPE(x, p, r.adopted));
+        }
+      });
+      pend = pend.filter(it => !ready.includes(it));
+    }
+
+    /* ---- 7. 第四階段：子女類 ---- */
+    rows.filter(x => x.def.kind === 'child').forEach(({ r, def, p }) => {
+      const a = anchorP(akey(def, r));
+      if (!a) { warnings.push('「' + (def.zh || r.rel) + '」沒有指定對象，已略過'); return; }
+      addPE(a, p, r.adopted);
+      let o = r.with ? anchorP(r.with) : pickOther(a, []);
+      if (o && o !== a) { addPE(o, p, r.adopted); addPA(a, o, 'married', false); }
+    });
+    linkIndexParents();
+    persons.forEach(c => {   // 有兩位父母者，父母之間一定要有伴侶線
+      const ps = pe.filter(e => e.c === c);
+      if (ps.length >= 2) addPA(ps[0].p, ps[1].p, 'married', false);
+    });
+
+    /* ---- 8. 整理資料結構 ---- */
+    const par = new Map(), kid = new Map();
+    persons.forEach(p => { par.set(p, []); kid.set(p, []); });
+    pe.forEach(e => { par.get(e.c).push(e); });
+    persons.forEach(c => {
+      if (par.get(c).length > 2) {
+        warnings.push('「' + (c.custom || c.rel) + '」有超過兩位父母，只採用前兩位');
+        par.set(c, par.get(c).slice(0, 2));
+      }
+    });
+    par.forEach(list => list.forEach(e => kid.get(e.p).push(e)));
+
+    const ageCmp = (a, b) => {
+      const ka = a.age != null, kb = b.age != null;
+      if (ka && kb && a.age !== b.age) return b.age - a.age;
+      if (ka !== kb) return ka ? -1 : 1;
+      return a._n - b._n;
+    };
+
+    /* ---- 9. 婚姻群組（Concrete Node） ---- */
+    const uf = new Map();
+    const find = x => { while (uf.get(x) !== x) { uf.set(x, uf.get(uf.get(x))); x = uf.get(x); } return x; };
+    persons.forEach(p => uf.set(p, p));
+    pa.forEach(e => { const ra = find(e.a), rb = find(e.b); if (ra !== rb) uf.set(ra, rb); });
+    const groups = new Map();
+    persons.forEach(p => { const k = find(p); if (!groups.has(k)) groups.set(k, []); groups.get(k).push(p); });
+
+    const orderMembers = ms => {
+      if (ms.length === 1) return ms;
+      const cnt = p => partnersOf(p).length;
+      const hub = ms.slice().sort((a, b) => (cnt(b) - cnt(a)) || ((b.isIndex ? 1 : 0) - (a.isIndex ? 1 : 0)) || (a._n - b._n))[0];
+      const seqM = [hub], placed = new Set([hub]);
+      const normal = hub.gender === 'F' ? 'L' : 'R';   // 男左女右：男性的現任在右、女性的現任在左
+      const list = partnersOf(hub).sort((u, v) => (TYPE_ORDER[u.type] - TYPE_ORDER[v.type]) || (u.q._n - v.q._n));
+      list.forEach((o, k) => {
+        if (placed.has(o.q)) return;
+        const side = (k % 2 === 0) ? normal : (normal === 'L' ? 'R' : 'L');
+        if (side === 'R') seqM.push(o.q); else seqM.unshift(o.q);
+        placed.add(o.q);
+      });
+      const queue = seqM.filter(x => x !== hub);
+      while (queue.length) {
+        const q = queue.shift();
+        const right = seqM.indexOf(q) > seqM.indexOf(hub);
+        partnersOf(q).sort((u, v) => (TYPE_ORDER[u.type] - TYPE_ORDER[v.type]) || (u.q._n - v.q._n)).forEach(o => {
+          if (placed.has(o.q)) return;
+          if (right) seqM.push(o.q); else seqM.unshift(o.q);
+          placed.add(o.q); queue.push(o.q);
+        });
+      }
+      return seqM;
+    };
+
+    const nodes = [], nodeOf = new Map();
+    groups.forEach(ms => {
+      const n = { id: 'n' + nodes.length, members: orderMembers(ms), level: 0, x: 0, kidNodes: [], parNodes: new Set(), owned: [], claimed: false };
+      n.members.forEach(m => nodeOf.set(m, n));
+      nodes.push(n);
+    });
+
+    /* ---- 10. 親子結（union）：同一組父母的子女 ---- */
+    const unions = [];
+    const ukey = new Map();
+    persons.forEach(c => {
+      const ps = par.get(c); if (!ps.length) return;
+      const key = ps.map(e => e.p.id).sort().join('|');
+      let u = ukey.get(key);
+      if (!u) { u = { key, a: ps[0].p, b: ps[1] ? ps[1].p : null, kids: [], adopted: {} }; ukey.set(key, u); unions.push(u); }
+      u.kids.push(c);
+      if (ps.some(e => e.adopted)) u.adopted[c.id] = true;
+    });
+    unions.forEach(u => u.kids.sort(ageCmp));
+    nodes.forEach(n => {
+      const us = unions.filter(u => nodeOf.get(u.a) === n);
+      const pos = u => u.b ? (n.members.indexOf(u.a) + n.members.indexOf(u.b)) / 2 : n.members.indexOf(u.a) + 0.01;
+      us.sort((x, y) => pos(x) - pos(y));
+      n.unions = us;
+      us.forEach(u => u.kids.forEach(c => {
+        const cn = nodeOf.get(c);
+        if (cn === n) { warnings.push('發現同一家庭內的親子與伴侶關係重疊，請檢查'); return; }
+        if (!n.kidNodes.includes(cn)) n.kidNodes.push(cn);
+        cn.parNodes.add(n);
+      }));
+    });
+
+    /* ---- 11. 世代層級 ---- */
+    for (let it = 0, changed = true; changed && it <= nodes.length + 2; it++) {
+      changed = false;
+      nodes.forEach(n => n.kidNodes.forEach(c => { if (c.level < n.level + 1) { c.level = n.level + 1; changed = true; } }));
+      if (changed && it > nodes.length) { warnings.push('親屬關係有循環（某人同時是自己的祖先），層級可能不正確'); break; }
+    }
+    nodes.forEach(n => {   // 沒有上層的節點，往下拉到「子代最小層 - 1」，讓連線不要拉太長
+      if (!n.parNodes.size && n.kidNodes.length) n.level = Math.min.apply(null, n.kidNodes.map(c => c.level)) - 1;
+    });
+    const loose = nodes.filter(n => !n.parNodes.size && !n.kidNodes.length && !n.members.includes(idx) && n.members.length === 1);
+    const main = nodes.filter(n => !loose.includes(n));
+    const minL = Math.min.apply(null, main.map(n => n.level));
+    main.forEach(n => { n.level -= minL; });
+    loose.forEach(n => { n.level = nodeOf.get(idx).level; });
+    nodes.forEach(n => n.members.forEach(m => { m.level = n.level; }));
+
+    /* ---- 12. 排版：後序走訪 ---- */
+    const levelRight = {};
+    const setX = (n, x) => { n.x = x; n.members.forEach((m, i) => { m.x = x + i; }); };
+    const bump = n => {
+      const r = n.x + n.members.length - 1;
+      if (levelRight[n.level] === undefined || levelRight[n.level] < r) levelRight[n.level] = r;
+    };
+    const shift = (n, d) => { setX(n, n.x + d); bump(n); n.owned.forEach(c => shift(c, d)); };
+    const layout = n => {
+      n.owned = [];
+      n.kidNodes.forEach(c => { if (!c.claimed) { c.claimed = true; n.owned.push(c); layout(c); } });
+      const xs = [];
+      n.unions.forEach(u => u.kids.forEach(c => { if (nodeOf.get(c) !== n && c.x != null) xs.push(c.x); }));
+      const w = n.members.length;
+      const minX = levelRight[n.level] === undefined ? -Infinity : levelRight[n.level] + 1 + CFG.GAP;
+      // 單親（沒有伴侶）的人：子女連線從符號「側邊」拉出，所以把他往子女中心的左側挪一點，讓連線能直直落下
+      const stub = (w === 1) ? (CFG.SYM / 2 + 22) / CFG.COLW : 0;
+      let x = xs.length ? (Math.min.apply(null, xs) + Math.max.apply(null, xs)) / 2 - (w - 1) / 2 - stub : (isFinite(minX) ? minX : 0);
+      if (x < minX) { const d = minX - x; x = minX; n.owned.forEach(c => shift(c, d)); }
+      setX(n, x); bump(n);
+    };
+    const roots = main.filter(n => !n.parNodes.size).sort((a, b) => {
+      const ra = Math.min.apply(null, a.members.map(m => SIDE_RANK[sideOf(m)]));
+      const rb = Math.min.apply(null, b.members.map(m => SIDE_RANK[sideOf(m)]));
+      return (ra - rb) || (a.members[0]._n - b.members[0]._n);
+    });
+    roots.forEach(n => { if (!n.claimed) { n.claimed = true; layout(n); } });
+    main.forEach(n => { if (!n.claimed) { n.claimed = true; layout(n); } });   // 保險：理論上不會發生
+    loose.forEach(n => {
+      const l = n.level, x = levelRight[l] === undefined ? 0 : levelRight[l] + 1 + CFG.GAP;
+      setX(n, x); bump(n);
+    });
+    const minX = Math.min.apply(null, persons.map(p => p.x));
+    persons.forEach(p => { p.x -= minX; });
+    nodes.forEach(n => { n.x -= minX; });
+
+    /* ---- 13. 稱謂（由案主出發做最短路徑搜尋，推算親屬稱謂） ---- */
+    const sibsOf = p => {
+      const mine = par.get(p).map(e => e.p), out = [];
+      mine.forEach(q => kid.get(q).forEach(e => { if (e.c !== p && !out.includes(e.c)) out.push(e.c); }));
+      return out;
+    };
+    const info = new Map([[idx, { path: '', chain: [idx], last: null, ptype: null }]]);
+    const queue = [idx];
+    const L = (t, q) => t === 'up' ? (q.gender === 'F' ? 'M' : 'F') : t === 'down' ? (q.gender === 'F' ? 'D' : 'S')
+      : t === 'sib' ? (q.gender === 'F' ? 'Z' : 'B') : (q.gender === 'F' ? 'W' : 'H');
+    while (queue.length) {
+      const cur = queue.shift(), ci = info.get(cur);
+      const nb = [];
+      par.get(cur).forEach(e => nb.push(['up', e.p]));
+      sibsOf(cur).forEach(q => nb.push(['sib', q]));
+      kid.get(cur).forEach(e => nb.push(['down', e.c]));
+      partnersOf(cur).forEach(o => nb.push(['par', o.q, o.type]));
+      nb.forEach(([t, q, ty]) => {
+        if (info.has(q)) return;
+        info.set(q, { path: ci.path + L(t, q), chain: ci.chain.concat([q]), last: t, ptype: ty || null });
+        queue.push(q);
+      });
+    }
+    const older = (a, b) => (a.age == null || b.age == null || a.age === b.age) ? 0 : (a.age > b.age ? 1 : -1);
+    const shareOnly = p => {
+      const a = par.get(p).map(e => e.p), b = par.get(idx).map(e => e.p);
+      const common = a.filter(x => b.includes(x));
+      if (!common.length) return '';
+      if (common.length === a.length && common.length === b.length) return '';
+      if (a.length === 1 && b.length === 1) return '';
+      if (common.length === 1 && common[0].gender === 'M') return '同父異母';
+      if (common.length === 1 && common[0].gender === 'F') return '同母異父';
+      return '';
+    };
+    const NOUN = { up: g => g === 'F' ? '母親' : '父親', down: g => g === 'F' ? '女兒' : '兒子',
+      sib: g => g === 'F' ? '姊妹' : '兄弟', par: g => g === 'F' ? '妻子' : '丈夫' };
+    const kin = (p, pi) => {
+      const path = pi.path, ch = pi.chain, g = p.gender, X = idx;
+      const o = older(p, X);
+      if (path === 'F') return '父親'; if (path === 'M') return '母親';
+      if (path === 'B' || path === 'Z') {
+        const base = g === 'F' ? (o > 0 ? '姊姊' : o < 0 ? '妹妹' : '姊妹') : (o > 0 ? '哥哥' : o < 0 ? '弟弟' : '兄弟');
+        return shareOnly(p) + base;
+      }
+      if (path === 'S') return '兒子'; if (path === 'D') return '女兒';
+      if (path === 'H') return '丈夫'; if (path === 'W') return '妻子';
+      if (path === 'FF') return '祖父'; if (path === 'FM') return '祖母';
+      if (path === 'MF') return '外祖父'; if (path === 'MM') return '外祖母';
+      if (/^[FM]{3}$/.test(path)) return (path[0] === 'M' ? '外' : '') + (g === 'F' ? '曾祖母' : '曾祖父');
+      if (/^[FM]{4}$/.test(path)) return (path[0] === 'M' ? '外' : '') + (g === 'F' ? '高祖母' : '高祖父');
+      if (path === 'FB') { const c = older(p, ch[1]); return c > 0 ? '伯父' : c < 0 ? '叔叔' : '伯叔'; }
+      if (path === 'FZ') return '姑姑'; if (path === 'MB') return '舅舅'; if (path === 'MZ') return '阿姨';
+      if (path === 'FBW') { const c = older(ch[2], ch[1]); return c > 0 ? '伯母' : c < 0 ? '嬸嬸' : '伯母／嬸嬸'; }
+      if (path === 'FZH') return '姑丈'; if (path === 'MBW') return '舅媽'; if (path === 'MZH') return '姨丈';
+      if (path === 'BW') { const c = older(ch[1], X); return c > 0 ? '嫂嫂' : c < 0 ? '弟媳' : '嫂嫂／弟媳'; }
+      if (path === 'ZH') { const c = older(ch[1], X); return c > 0 ? '姊夫' : c < 0 ? '妹夫' : '姊夫／妹夫'; }
+      if (path === 'HF') return '公公'; if (path === 'HM') return '婆婆';
+      if (path === 'WF') return '岳父'; if (path === 'WM') return '岳母';
+      if (path === 'HB') { const c = older(p, ch[1]); return c > 0 ? '大伯' : c < 0 ? '小叔' : '夫之兄弟'; }
+      if (path === 'HZ') { const c = older(p, ch[1]); return c > 0 ? '大姑' : c < 0 ? '小姑' : '夫之姊妹'; }
+      if (path === 'WB') { const c = older(p, ch[1]); return c > 0 ? '大舅子' : c < 0 ? '小舅子' : '妻之兄弟'; }
+      if (path === 'WZ') { const c = older(p, ch[1]); return c > 0 ? '大姨子' : c < 0 ? '小姨子' : '妻之姊妹'; }
+      if (path === 'SS') return '孫子'; if (path === 'SD') return '孫女';
+      if (path === 'DS') return '外孫'; if (path === 'DD') return '外孫女';
+      if (path === 'SW') return '媳婦'; if (path === 'DH') return '女婿';
+      if (path === 'SSS' || path === 'DSS' ) return g === 'F' ? '曾孫女' : '曾孫';
+      if (path === 'BS') return '姪子'; if (path === 'BD') return '姪女';
+      if (path === 'ZS') return '外甥'; if (path === 'ZD') return '外甥女';
+      if (path === 'FW') return '繼母'; if (path === 'MH') return '繼父';
+      if (/^[FM][BZ][SD]$/.test(path)) {      // 堂／表兄弟姊妹
+        const pf = (path[0] === 'F' && path[1] === 'B') ? '堂' : '表';
+        return pf + (g === 'F' ? (o > 0 ? '姊' : o < 0 ? '妹' : '姊妹') : (o > 0 ? '哥' : o < 0 ? '弟' : '兄弟'));
+      }
+      if (/^[FM][FM][BZ][SD]$/.test(path)) {   // 父母的堂／表兄弟姊妹（堂叔、表姑…）
+        const pf = (path[1] === 'F' && path[2] === 'B') ? '堂' : '表';
+        const base = path[0] === 'F' ? (g === 'F' ? '姑' : '叔伯') : (g === 'F' ? '姨' : '舅');
+        return pf + base;
+      }
+      if (path === 'FFB') { const c = older(p, ch[2]); return c > 0 ? '伯公' : c < 0 ? '叔公' : '伯公／叔公'; }
+      if (path === 'FFZ') return '姑婆'; if (path === 'FMB') return '舅公'; if (path === 'FMZ') return '姨婆';
+      return null;
+    };
+    const memo = new Map();
+    const labelOf = p => {
+      if (memo.has(p)) return memo.get(p);
+      memo.set(p, '');                               // 防止循環
+      let t;
+      if (p.isIndex) t = p.custom || '本案當事人';
+      else if (p.custom) t = p.custom;
+      else if (p.rel === 'spouse') t = p.gender === 'M' ? '丈夫' : p.gender === 'F' ? '妻子' : '配偶';
+      else if (FIXED[p.rel]) t = FIXED[p.rel];
+      else {
+        const pi = info.get(p);
+        if (pi && pi.path) {
+          const prev = pi.chain[pi.chain.length - 2];
+          if (pi.last === 'par' && pi.ptype && pi.ptype !== 'married' && prev !== idx) {
+            t = labelOf(prev) + '的' + ({ partner: '伴侶', separated: '分居配偶', divorced: '前配偶' }[pi.ptype] || '伴侶');
+          } else {
+            t = kin(p, pi);
+            if (!t) {
+              const pl = labelOf(prev);
+              t = (prev === idx ? '' : (pl + '的')) + NOUN[pi.last](p.gender);
+            }
+          }
+        } else if (p.rel === 'father_of') t = '父親';
+        else if (p.rel === 'mother_of') t = '母親';
+        else t = '親屬';
+      }
+      memo.set(p, t); return t;
+    };
+    persons.forEach(p => { p.display = labelOf(p); });
+
+    /* ---- 14. 簡單檢查，給使用者的提醒 ---- */
+    persons.forEach(p => {
+      if (!p.isIndex && !p.implied && p.rel !== 'other' && !info.has(p)) warnings.push('「' + p.display + '」沒有連到案主，請確認「對象」欄位');
+      if (p.gender === 'U' && !p.isIndex && !p.implied) warnings.push('「' + p.display + '」尚未選擇性別，先以菱形顯示');
+    });
+    par.forEach((list, c) => {
+      if (list.length === 2 && list[0].p.age != null && c.age != null && list[0].p.age <= c.age)
+        warnings.push('「' + list[0].p.display + '」年齡不大於其子女「' + c.display + '」，請確認');
+    });
+
+    return { persons, nodes, unions, couples: pa.map(e => ({ a: e.a, b: e.b, type: e.type })), warnings, index: idx, parents: par };
+  }
+
+  /* ============================================================
+   *  toSVG：把排好的人畫成 SVG
+   * ============================================================ */
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const trunc = (s, max) => {
+    s = String(s || ''); let w = 0, out = '';
+    for (const ch of s) { const cw = ch.charCodeAt(0) < 256 ? 0.55 : 1; if (w + cw > max) return out + '…'; w += cw; out += ch; }
+    return out;
+  };
+
+  function toSVG(model, opt) {
+    opt = opt || {};
+    const C = Object.assign({}, CFG, opt.cfg || {});
+    const draw = model.persons.filter(p => p.x != null && isFinite(p.x));
+    if (!draw.length) return '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"></svg>';
+    const cx = p => C.PAD + p.x * C.COLW;
+    const cy = p => C.TOP + p.level * C.ROWH + C.SYM / 2;
+    const R = C.SYM / 2;
+    const maxX = Math.max.apply(null, draw.map(p => p.x)), maxL = Math.max.apply(null, draw.map(p => p.level));
+    const W = Math.max(240, C.PAD * 2 + maxX * C.COLW), H = C.TOP + maxL * C.ROWH + C.SYM + 70;
+    const under = [], lines = [], syms = [], texts = [];
+    const ln = (x1, y1, x2, y2, extra) => lines.push('<line x1="' + x1.toFixed(1) + '" y1="' + y1.toFixed(1) + '" x2="' + x2.toFixed(1) + '" y2="' + y2.toFixed(1) + '" stroke="' + C.stroke + '" stroke-width="1.5"' + (extra || '') + '/>');
+
+    /* 同住框：把「所有」同住者合成同一個圈（不分世代、不論是否相鄰）。
+       做法：用最短連線把全部同住者串成一體，沿連線畫出粗的圓角區塊再描邊，所以一定只會是一個連通的圈。 */
+    const hh = draw.filter(p => p.coRes);
+    if (hh.length) {
+      GENO._hhSeq = (GENO._hhSeq || 0) + 1;
+      const hid = 'ghh' + GENO._hhSeq, HR = R + 22;
+      const pts = hh.map(p => ({ x: cx(p), y: cy(p) + 10 }));   // 往下偏 10：把名字文字也圈進去
+      const segs = [], inT = [0], rest = pts.map((_, i) => i).slice(1);
+      while (rest.length) {
+        let best = null;
+        inT.forEach(i => rest.forEach(j => { const d = Math.hypot(pts[i].x - pts[j].x, pts[i].y - pts[j].y); if (!best || d < best.d) best = { i, j, d }; }));
+        segs.push([pts[best.i], pts[best.j]]); inT.push(best.j); rest.splice(rest.indexOf(best.j), 1);
+      }
+      const blob = (w, col) => pts.map(p => '<circle cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="' + (w / 2) + '" fill="' + col + '"/>').join('') +
+        segs.map(([p, q]) => '<line x1="' + p.x.toFixed(1) + '" y1="' + p.y.toFixed(1) + '" x2="' + q.x.toFixed(1) + '" y2="' + q.y.toFixed(1) + '" stroke="' + col + '" stroke-width="' + w + '" stroke-linecap="round"/>').join('');
+      const mk = id => '<mask id="' + id + '" maskUnits="userSpaceOnUse" x="0" y="0" width="' + W.toFixed(0) + '" height="' + H.toFixed(0) + '">';
+      const top = pts.reduce((a, p) => (p.y < a.y || (p.y === a.y && p.x < a.x)) ? p : a, pts[0]);
+      under.push('<g pointer-events="none"><defs>' + mk(hid + 'o') + blob(HR * 2 + 3, '#fff') + blob(HR * 2, '#000') + '</mask>' + mk(hid + 'f') + blob(HR * 2, '#fff') + '</mask></defs>' +
+        '<rect width="' + W.toFixed(0) + '" height="' + H.toFixed(0) + '" fill="' + C.household + '" fill-opacity="0.07" mask="url(#' + hid + 'f)"/>' +
+        '<rect width="' + W.toFixed(0) + '" height="' + H.toFixed(0) + '" fill="' + C.household + '" mask="url(#' + hid + 'o)"/>' +
+        '<text x="' + top.x.toFixed(1) + '" y="' + Math.max(10, top.y - HR - 5).toFixed(1) + '" text-anchor="middle" font-size="10" font-weight="700" fill="' + C.household + '">同住</text></g>');
+    }
+
+    /* 關係品質線（與案主之間）：親密 / 疏離 / 衝突 / 切斷 */
+    const idx = model.index;
+    const tieSeen = {};
+    draw.forEach(p => {
+      if (!p.tie || p === idx || !C.tie[p.tie]) return;
+      const x0 = cx(p), y0 = cy(p), x1 = cx(idx), y1 = cy(idx);
+      const dx = x1 - x0, dy = y1 - y0, d = Math.hypot(dx, dy) || 1, ux = dx / d, uy = dy / d;
+      const sx = x0 + ux * (R + 3), sy = y0 + uy * (R + 3), ex = x1 - ux * (R + 4), ey = y1 - uy * (R + 4);
+      const same = Math.abs(dy) < 1;
+      const k = (tieSeen[p.level] = (tieSeen[p.level] || 0) + 1);
+      const bulge = same ? -(R + 20 + 8 * k) : 0;
+      const mx = (sx + ex) / 2 + (same ? 0 : (dx >= 0 ? -34 : 34)), my = (sy + ey) / 2 + bulge;
+      const pt = t => { const a = (1 - t) * (1 - t), b = 2 * (1 - t) * t, c = t * t; return [a * sx + b * mx + c * ex, a * sy + b * my + c * ey]; };
+      const col = C.tie[p.tie];
+      const N = 28, pts = [];
+      for (let i = 0; i <= N; i++) pts.push(pt(i / N));
+      const off = (o) => pts.map((q, i) => {
+        const a = pts[Math.max(0, i - 1)], b = pts[Math.min(N, i + 1)], tx = b[0] - a[0], ty = b[1] - a[1], tl = Math.hypot(tx, ty) || 1;
+        return [q[0] - ty / tl * o, q[1] + tx / tl * o];
+      });
+      const path = arr => 'M' + arr.map(q => q[0].toFixed(1) + ' ' + q[1].toFixed(1)).join(' L');
+      if (p.tie === 'close') {
+        under.push('<path d="' + path(off(2.2)) + '" fill="none" stroke="' + col + '" stroke-width="1.4"/>');
+        under.push('<path d="' + path(off(-2.2)) + '" fill="none" stroke="' + col + '" stroke-width="1.4"/>');
+      } else if (p.tie === 'distant') {
+        under.push('<path d="M' + sx.toFixed(1) + ' ' + sy.toFixed(1) + ' Q' + mx.toFixed(1) + ' ' + my.toFixed(1) + ' ' + ex.toFixed(1) + ' ' + ey.toFixed(1) + '" fill="none" stroke="' + col + '" stroke-width="1.5" stroke-dasharray="2 5" stroke-linecap="round"/>');
+      } else if (p.tie === 'conflict') {
+        const zz = pts.map((q, i) => { const a = pts[Math.max(0, i - 1)], b = pts[Math.min(N, i + 1)], tx = b[0] - a[0], ty = b[1] - a[1], tl = Math.hypot(tx, ty) || 1, o = (i % 2 ? 4 : -4); return [q[0] - ty / tl * o, q[1] + tx / tl * o]; });
+        under.push('<path d="' + path(zz) + '" fill="none" stroke="' + col + '" stroke-width="1.4" stroke-linejoin="round"/>');
+      } else {   // cutoff：實線＋中間一道橫槓
+        under.push('<path d="M' + sx.toFixed(1) + ' ' + sy.toFixed(1) + ' Q' + mx.toFixed(1) + ' ' + my.toFixed(1) + ' ' + ex.toFixed(1) + ' ' + ey.toFixed(1) + '" fill="none" stroke="' + col + '" stroke-width="1.6"/>');
+        const m = pts[N / 2], a = pts[N / 2 - 1], b = pts[N / 2 + 1], tx = b[0] - a[0], ty = b[1] - a[1], tl = Math.hypot(tx, ty) || 1;
+        under.push('<line x1="' + (m[0] - ty / tl * 7).toFixed(1) + '" y1="' + (m[1] + tx / tl * 7).toFixed(1) + '" x2="' + (m[0] + ty / tl * 7).toFixed(1) + '" y2="' + (m[1] - tx / tl * 7).toFixed(1) + '" stroke="' + col + '" stroke-width="2.2"/>');
+      }
+    });
+
+    /* 伴侶線 */
+    const origin = new Map();     // 'idA|idB' → 該對伴侶的子女線起點
+    let routeCount = 0;
+    model.couples.forEach(c => {
+      const a = c.a, b = c.b;
+      if (a.x == null || b.x == null) return;
+      const l = a.x <= b.x ? a : b, r = a.x <= b.x ? b : a, y = cy(a);
+      const key = [a.id, b.id].sort().join('|');
+      let mx, my;
+      if (Math.abs(a.x - b.x) <= 1.001) {
+        ln(cx(l) + R, y, cx(r) - R, y, c.type === 'partner' ? ' stroke-dasharray="5 4"' : '');
+        mx = (cx(l) + cx(r)) / 2; my = y;
+      } else {
+        const yy = y + R + 48 + 6 * (routeCount++ % 3);
+        lines.push('<path d="M' + cx(l).toFixed(1) + ' ' + (y + R).toFixed(1) + ' V' + yy.toFixed(1) + ' H' + cx(r).toFixed(1) + ' V' + (y + R).toFixed(1) +
+          '" fill="none" stroke="' + C.stroke + '" stroke-width="1.5"' + (c.type === 'partner' ? ' stroke-dasharray="5 4"' : '') + '/>');
+        mx = (cx(l) + cx(r)) / 2; my = yy;
+      }
+      if (c.type === 'separated') ln(mx - 4, my + 8, mx + 4, my - 8, '');
+      if (c.type === 'divorced') { ln(mx - 7, my + 8, mx + 1, my - 8, ''); ln(mx - 1, my + 8, mx + 7, my - 8, ''); }
+      origin.set(key, { x: mx, y: my });
+    });
+
+    /* 親子連線 */
+    const items = [];
+    model.unions.forEach(u => {
+      const kids = u.kids.filter(k => k.x != null && k.level > u.a.level);
+      if (!kids.length || u.a.x == null) return;
+      let o;
+      if (u.b) {
+        o = origin.get([u.a.id, u.b.id].sort().join('|'));
+        if (!o) return;
+      } else {
+        const p = u.a, y = cy(p);
+        const hasAdj = side => model.couples.some(c => (c.a === p || c.b === p) && (() => { const q = c.a === p ? c.b : c.a; return Math.abs(q.x - p.x) <= 1.001 && (side > 0 ? q.x > p.x : q.x < p.x); })());
+        const side = !hasAdj(1) ? 1 : !hasAdj(-1) ? -1 : 0;
+        if (side) { const sx = cx(p) + side * (R + 22); ln(cx(p) + side * R, y, sx, y); o = { x: sx, y }; }
+        else o = { x: cx(p), y: y + R };
+      }
+      const xs = kids.map(cx).concat([o.x]);
+      items.push({ u, o, kids, xmin: Math.min.apply(null, xs), xmax: Math.max.apply(null, xs), lvl: u.a.level });
+    });
+    const lanes = {};
+    items.sort((p, q) => p.lvl - q.lvl || p.xmin - q.xmin).forEach(it => {
+      const arr = (lanes[it.lvl] = lanes[it.lvl] || []);
+      let k = arr.findIndex(last => it.xmin > last + 10);
+      if (k < 0) { k = arr.length; arr.push(0); }
+      arr[k] = it.xmax; it.lane = Math.min(k, 4);
+    });
+    items.forEach(it => {
+      const base = C.TOP + it.lvl * C.ROWH + R + 70 + it.lane * 7;
+      ln(it.o.x, it.o.y, it.o.x, base);
+      if (it.xmax - it.xmin > 0.5) ln(it.xmin, base, it.xmax, base);
+      it.kids.forEach(k => {
+        const ad = it.u.adopted[k.id];
+        ln(cx(k), base, cx(k), cy(k) - R - (k.isIndex ? 4 : 0), ad ? ' stroke-dasharray="4 3"' : '');
+      });
+    });
+
+    /* 人物符號與文字 */
+    const shape = (p, grow, stroke, fill, dash) => {
+      const x = cx(p), y = cy(p), r = R + grow;
+      const a = ' fill="' + fill + '" stroke="' + stroke + '" stroke-width="1.7"' + (dash ? ' stroke-dasharray="' + dash + '"' : '');
+      if (p.gender === 'M') return '<rect x="' + (x - r).toFixed(1) + '" y="' + (y - r).toFixed(1) + '" width="' + (2 * r) + '" height="' + (2 * r) + '"' + a + '/>';
+      if (p.gender === 'F') return '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + r + '"' + a + '/>';
+      const d = r * 1.2;
+      return '<polygon points="' + x.toFixed(1) + ',' + (y - d).toFixed(1) + ' ' + (x + d).toFixed(1) + ',' + y.toFixed(1) + ' ' + x.toFixed(1) + ',' + (y + d).toFixed(1) + ' ' + (x - d).toFixed(1) + ',' + y.toFixed(1) + '"' + a + '/>';
+    };
+    const txt = (x, y, s, size, fill, weight) => {
+      const base = ' x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" text-anchor="middle" font-size="' + size + '"' + (weight ? ' font-weight="' + weight + '"' : '');
+      return '<text' + base + ' fill="' + C.halo + '" stroke="' + C.halo + '" stroke-width="3.6" stroke-linejoin="round">' + esc(s) + '</text>' +
+             '<text' + base + ' fill="' + fill + '">' + esc(s) + '</text>';
+    };
+    draw.forEach(p => {
+      const x = cx(p), y = cy(p);
+      const tip = p.display + (p.age != null ? '，' + p.age + '歲' : '') + (p.deceased ? '，已歿' : '') + (p.coRes ? '，同住' : '') + (p.implied ? '（未建檔，由系統依關係補上）' : '') + (p.note ? '：' + p.note : '');
+      let g = '<g data-pid="' + esc(p.id) + '"><title>' + esc(tip) + '</title>';
+      if (p.isIndex) g += shape(p, 4, C.index, 'none') + shape(p, 0, C.index, '#eaf2ff');
+      else if (p.implied) g += shape(p, 0, C.implied, '#f3f4f6', '3 3');
+      else g += shape(p, 0, C.stroke, '#fff');
+      if (p.deceased) {
+        const e = R + 5;
+        g += '<line x1="' + (x - e).toFixed(1) + '" y1="' + (y - e).toFixed(1) + '" x2="' + (x + e).toFixed(1) + '" y2="' + (y + e).toFixed(1) + '" stroke="' + C.dead + '" stroke-width="2"/>' +
+             '<line x1="' + (x + e).toFixed(1) + '" y1="' + (y - e).toFixed(1) + '" x2="' + (x - e).toFixed(1) + '" y2="' + (y + e).toFixed(1) + '" stroke="' + C.dead + '" stroke-width="2"/>';
+      }
+      g += '</g>';
+      syms.push(g);
+      const ly = y + R + 16;
+      texts.push(txt(x, ly, trunc(p.display, 6.4), 12, p.implied ? C.implied : (p.isIndex ? C.index : C.text), p.isIndex ? 700 : 600));
+      const sub = p.implied ? '未建檔' : ((p.age != null ? p.age + '歲' : '') + (p.deceased ? (p.age != null ? ' ' : '') + '歿' : ''));
+      if (sub) texts.push(txt(x, ly + 13, sub, 10.5, C.sub));
+      if (p.note && !p.implied) texts.push(txt(x, ly + 25, trunc(p.note, 8), 10, C.note));
+    });
+
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + W.toFixed(0) + ' ' + H.toFixed(0) + '" width="' + W.toFixed(0) + '" height="' + H.toFixed(0) +
+      '" font-family="' + C.font.replace(/"/g, "'") + '" style="max-width:100%;height:auto"><rect width="100%" height="100%" fill="' + C.bg + '"/>' +
+      under.join('') + lines.join('') + syms.join('') + texts.join('') + '</svg>';
+  }
+
+  /* 一步到位：關係資料 → 畫進網頁元素 */
+  function render(input, el, opt) {
+    const model = build(input);
+    const svg = toSVG(model, opt);
+    if (el) el.innerHTML = svg;
+    return { model, svg, warnings: model.warnings };
+  }
+
+  /* ============================================================
+   *  fromLegacy：舊格式（members + unions + 手動座標）→ 關係資料 family
+   *  只看「誰是誰的父母／伴侶／子女」的結構，不看座標。
+   *  從案主出發逐層向外找，找得到關係的用一般關係表示，連不上的當作「同住的非親屬」。
+   * ============================================================ */
+  function fromLegacy(g) {
+    if (!g || !g.members || !g.members.length) return null;
+    const M = {}; g.members.forEach(m => { M[m.id] = m; });
+    const ixm = g.members.find(m => m.isIndex);
+    if (!ixm) return null;
+    const U = (g.unions || []).map(u => ({ a: u.a, b: u.b || null, type: u.type || 'married', kids: (u.children || []).slice() }))
+      .filter(u => M[u.a] && (!u.b || M[u.b]));
+    const rid = {}; rid[ixm.id] = 'index';
+    const rows = [], pending = [], used = new Set([ixm.id]);
+    const STD = /^(父親|母親|配偶|前配偶|兒子|女兒|長子|次子|三子|長女|次女|子女|弟弟|妹妹|哥哥|姊姊|姐姐|祖父|祖母|外祖父|外祖母|嬰兒|案主本人|案童|案主之母|案主之父)([(（].*[)）])?$/;
+    const add = (m, rel, extra) => {
+      const r = Object.assign({ id: 'm_' + m.id, rel }, extra || {});
+      if (!REL[rel].g && m.gender) r.gender = m.gender;
+      if (m.age != null && m.age !== '' && !isNaN(+m.age)) r.age = +m.age;
+      if (m.status === 'deceased' || m.deceased) r.deceased = true;
+      if (m.sameHousehold) r.coRes = true;
+      if (m.note) r.note = m.note;
+      if (rel === 'other') r.label = m.name || '同住者';
+      else if (m.name && !STD.test(m.name)) r.label = m.name;
+      rows.push(r); rid[m.id] = r.id; used.add(m.id); return r;
+    };
+    const partnersOf = id => U.filter(u => u.b && (u.a === id || u.b === id)).map(u => ({ u, q: u.a === id ? u.b : u.a }));
+    const unionOfChild = id => U.find(u => u.kids.includes(id));
+    let parentsStatus;
+    const pu = unionOfChild(ixm.id);
+    if (pu) {
+      [pu.a, pu.b].filter(Boolean).forEach(pid => { const m = M[pid]; add(m, m.gender === 'M' ? 'father' : 'mother'); });
+      if (pu.b) parentsStatus = pu.type;
+      pu.kids.filter(k => k !== ixm.id && M[k]).forEach(k => { const m = M[k]; add(m, m.gender === 'M' ? 'brother' : 'sister'); });
+    }
+    partnersOf(ixm.id).forEach(({ u, q }) => {
+      if (used.has(q)) return;
+      add(M[q], { married: 'spouse', partner: 'partner', separated: 'separated', divorced: 'exspouse' }[u.type] || 'spouse');
+    });
+    U.filter(u => u.a === ixm.id || u.b === ixm.id).forEach(u => u.kids.forEach(k => {
+      if (used.has(k) || !M[k]) return;
+      const other = u.b ? (u.a === ixm.id ? u.b : u.a) : null;
+      const r = add(M[k], M[k].gender === 'M' ? 'son' : 'daughter');
+      if (other) pending.push([r, other]);
+    }));
+    for (let guard = 0, changed = true; changed && guard < 200; guard++) {
+      changed = false;
+      for (const m of g.members) {
+        if (used.has(m.id)) continue;
+        let rel = null, extra = {};
+        const sp = partnersOf(m.id).find(p => used.has(p.q));
+        if (sp) {
+          rel = 'c_spouse'; extra = { of: rid[sp.q] };
+          if (sp.u.type !== 'married') extra.stype = sp.u.type;
+        } else {
+          const up = U.find(u => (u.a === m.id || u.b === m.id) && u.kids.some(k => used.has(k)));
+          if (up) {
+            rel = m.gender === 'M' ? 'c_father' : 'c_mother'; extra = { of: rid[up.kids.find(k => used.has(k))] };
+          } else {
+            const uc = unionOfChild(m.id);
+            if (uc && (used.has(uc.a) || (uc.b && used.has(uc.b)))) {
+              const par = used.has(uc.a) ? uc.a : uc.b, other = par === uc.a ? uc.b : uc.a;
+              rel = m.gender === 'M' ? 'c_son' : 'c_dau'; extra = { of: rid[par] };
+              if (other) { const r = add(m, rel, extra); pending.push([r, other]); changed = true; continue; }
+            }
+          }
+        }
+        if (rel) { add(m, rel, extra); changed = true; }
+      }
+    }
+    g.members.forEach(m => { if (!used.has(m.id)) add(m, 'other'); });
+    pending.forEach(([r, o]) => { if (rid[o]) r.with = rid[o]; });
+    const idxOut = { gender: ixm.gender || 'U' };
+    if (ixm.age != null && ixm.age !== '' && !isNaN(+ixm.age)) idxOut.age = +ixm.age;
+    idxOut.coRes = !!ixm.sameHousehold;
+    if (ixm.note) idxOut.note = ixm.note;
+    const out = { index: idxOut, relatives: rows };
+    if (parentsStatus) out.parentsStatus = parentsStatus;
+    return out;
+  }
+
+  return { build, toSVG, render, fromLegacy, REL, CFG, FIXED };
+});
+
+</script>
+
+<script>
+// 以「本地時間」產生 YYYY-MM-DD 字串。
+// 不可用 toISOString()：它回傳 UTC 日期，在台灣（UTC+8）每天 00:00–08:00 會變成前一天。
+function localDateStr(d = new Date()){
+  const p = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
+}
+
 // ═══════════════════════════════
 // 虛構示範資料（非真實個人資料）
 // ═══════════════════════════════
@@ -901,7 +1735,7 @@ const SEED_CASES = [
           subjective:"兒童對瘀傷成因之說明前後不一致，父親則表示「自己不小心跌倒的」，雙方說法有出入。",
           objective:"兒童身上發現瘀傷，位置與描述之跌倒情形不完全相符，已依法通報警政單位，待進一步調查。",
           bio:"身體檢視發現瘀傷，已建議轉介醫療進行詳細評估及驗傷。",
-          psycho:"兒童於訪談中情緒略顯緊張，對相關問題之回應簡短且閉避。",
+          psycho:"兒童於訪談中情緒略顯緊張，對相關問題之回應簡短且迴避。",
           social:"家庭照顧穩定性再度受到質疑，跨單位（警政、教育）協調介入中。",
           eco:"經濟狀況未變，非本次重點議題。",
           swot:{s:"學校敏感度高，及時通報爭取介入時機",w:"親子雙方說法不一致，照顧安全性存疑",o:"已啟動跨單位協調機制，可整合多方資源共同評估",t:"若調查證實照顧疏忽或不當對待，兒童人身安全風險升高"},
@@ -1082,7 +1916,7 @@ const SEED_CASES = [
       {date:"2024-11-16",worker:"林社工",risk:"stable",summary:"日常生活功能尚可，社區活動參與度高，情緒穩定。"},
     ]},
 
-  {id:"B-2331",type:"未成年家長",lat:25.0361,lon:121.5049,area:"中和區",worker:"陳社工",risk:"watch",open:"2024-06-01",lastVisit:"2025-01-12",freqDays:14,
+  {id:"B-2331",type:"未成年家長",lat:25.0361,lon:121.5049,area:"萬華區",worker:"陳社工",risk:"watch",open:"2024-06-01",lastVisit:"2025-01-12",freqDays:14,
     gender:"女",age:17,household:"與母親同住",living:"母親租賃住所",openReason:"醫院社工轉介，未成年產婦個案",
     genogram:{
       members:[
@@ -1449,12 +2283,12 @@ SEED_CASES.forEach(c => {
   function addDays(dateStr, days){
     const d = new Date(dateStr+'T00:00:00');
     d.setDate(d.getDate() + days);
-    return d.toISOString().slice(0,10);
+    return localDateStr(d);
   }
   function daysBetween(fromStr, toStr){
     return Math.round((new Date(toStr+'T00:00:00') - new Date(fromStr+'T00:00:00')) / (1000*60*60*24));
   }
-  const todayStr = new Date().toISOString().slice(0,10);
+  const todayStr = localDateStr();
 
   // 刻意保留「逾期」示範情境的案號：距今天數 = 建議頻率 + 這裡指定的超出天數
   const OVERDUE_OVERRIDE_EXTRA_DAYS = {
@@ -1516,6 +2350,13 @@ function resetToSeedData(){
 }
 
 let CASES = loadCases();
+// 舊版家系圖（手動座標）→ 自動轉成「關係資料」；舊資料保留不刪，只是改用新引擎畫
+CASES.forEach(c => {
+  if(!c.family && c.genogram){
+    try{ const f = GENO.fromLegacy(c.genogram); if(f) c.family = f; }
+    catch(e){ console.warn('家系圖轉換失敗，沿用舊圖：', c.id, e); }
+  }
+});
 
 // ═══════════════════════════════
 // STATE
@@ -1531,9 +2372,10 @@ let caseFormEditId = null;
 let visitFormCaseId = null;
 let visitFormIdx = null;
 let pickingLocation = false;
-let cfGenoMembers = [];
-let cfGenoUnions = [];
-let cfGenoIdCounter = 0;
+let famRows = [];        // 家系圖表單：每位親屬一列（只存關係）
+let famParents = 'married';
+let famIxCo = true;
+let famKeep = false;     // 載入時該案本來就有家系圖（即使只有案主一人也要保留）
 const markers = {};
 
 // ═══════════════════════════════
@@ -1589,7 +2431,7 @@ function statusLabel(c){
 }
 
 function daysAgo(dateStr){
-  const d = new Date(dateStr);
+  const d = new Date(dateStr+'T00:00:00');
   const now = new Date();
   return Math.floor((now-d)/(1000*60*60*24));
 }
@@ -1673,43 +2515,45 @@ function buildHistTooltip(c){
     <div class="hist-row">
       <div class="hist-dot" style="background:${riskColor(h.risk)}"></div>
       <div class="hist-body">
-        <div class="hist-date">${h.date} · ${h.worker}</div>
-        <div class="hist-summary">${h.summary}</div>
+        <div class="hist-date">${escHtml(h.date)} · ${escHtml(h.worker)}</div>
+        <div class="hist-summary">${escHtml(h.summary)}</div>
       </div>
     </div>`).join('');
   const more = c.history.length > 3
     ? `<div class="hist-more">還有 ${c.history.length-3} 筆紀錄 · 點擊查看完整時間軸</div>`
     : `<div class="hist-more">點擊標記查看完整資訊</div>`;
-  const res = getResourcesForCase(c);
-  const resItems = [...res.specific, ...res.national.slice(0,1)];
-  const programHtml = res.programs.length ? `
-    <div class="hist-res-title">相關福利項目</div>
-    ${res.programs.slice(0,2).map(p => `<div class="hist-res-item"><a href="${p.link || 'https://dosw.gov.taipei/'}" target="_blank" rel="noopener">${p.name} ↗</a></div>`).join('')}
-  ` : '';
-  const resHtml = resItems.length ? `
-    <div class="hist-res-title">聯絡窗口</div>
-    ${resItems.map(r => `<div class="hist-res-item">${r.name}：<a href="${telHref(r)}">${telLabel(r)}</a></div>`).join('')}
-  ` : '';
+  // 懸停提示框無法點擊（滑鼠移過去就會消失），所以不放連結；福利資源與電話在右側詳情面板
+  const resHtml = `<div class="hist-res-title">點擊標記查看福利資源與聯絡窗口</div>`;
   const statusTag = c.status==='closed' ? '（已結案）' : c.reopened ? '（再進案）' : '';
   return `<div class="hist-tip">
-    <div class="hist-tip-head"><span class="hist-tip-id">${c.id}${statusTag}</span><span class="hist-tip-type">${c.type} · ${c.area}</span></div>
+    <div class="hist-tip-head"><span class="hist-tip-id">${escHtml(c.id)}${statusTag}</span><span class="hist-tip-type">${escHtml(c.type)} · ${escHtml(c.area)}</span></div>
     ${rows}
     ${more}
-    ${programHtml}
     ${resHtml}
   </div>`;
+}
+
+// 地圖標記圖示：已加入路線的個案加上藍框（重建標記時也會保留）
+function markerIcon(c){
+  const inRoute = selected.has(c.id);
+  const size = inRoute ? 20 : 18;
+  const html = `<div style="
+    width:${size}px;height:${size}px;border-radius:50%;
+    background:${markerBackground(c)};
+    border:${inRoute?'3px solid #2563eb':'2.5px solid white'};
+    box-shadow:${inRoute?'0 0 0 2px rgba(37,99,235,.3),':''}0 2px 6px rgba(0,0,0,.25);
+    transition:all .15s;
+  "></div>`;
+  return L.divIcon({html, iconSize:[size,size], iconAnchor:[size/2,size/2], className:''});
 }
 
 function rebuildMarkers(){
   Object.values(markers).forEach(m => map.removeLayer(m));
   for(const k in markers) delete markers[k];
   CASES.forEach(c => {
-    const bg = markerBackground(c);
-    const icon = L.divIcon({
-      html:`<div style="width:18px;height:18px;border-radius:50%;background:${bg};border:2.5px solid white;box-shadow:0 2px 6px rgba(0,0,0,.25);transition:transform .15s;"></div>`,
-      iconSize:[18,18], iconAnchor:[9,9], className:''
-    });
-    const m = L.marker([c.lat,c.lon],{icon});
+    // 座標無效的資料不畫標記，避免 Leaflet 丟錯導致整個 App 無法載入
+    if(!Number.isFinite(c.lat) || !Number.isFinite(c.lon)) return;
+    const m = L.marker([c.lat,c.lon],{icon: markerIcon(c)});
     m.bindTooltip(buildHistTooltip(c), {direction:'top', offset:[0,-11], className:'hist-leaflet-tip'});
     m.on('click',() => showCase(c.id));
     m.addTo(map);
@@ -1789,7 +2633,7 @@ function renderList(){
   const q = document.getElementById('search').value.toLowerCase();
   const list = document.getElementById('case-list');
   const filtered = CASES.filter(c => {
-    const matchSearch = !q || c.id.toLowerCase().includes(q) || c.type.includes(q) || c.area.includes(q);
+    const matchSearch = !q || c.id.toLowerCase().includes(q) || (c.type||'').toLowerCase().includes(q) || (c.area||'').toLowerCase().includes(q);
     const matchWorker = activeWorker==='all' || c.worker===activeWorker;
     return matchesActiveFilter(c) && matchSearch && matchWorker;
   });
@@ -1813,11 +2657,12 @@ function renderList(){
     const rowClass = c.status==='closed' ? 'closed' : c.risk;
     const badgeClass = c.status==='closed' ? 'risk-closed' : `risk-${c.risk}`;
     const reopenTag = c.reopened ? `<span class="reopen-badge">🔁 再進案</span>` : '';
-    return `<div class="case-item ${rowClass} ${activeCaseId===c.id?'selected':''}" onclick="showCase('${c.id}')">
-      <div class="case-cb ${isSelected?'checked':''}" onclick="event.stopPropagation();toggleSelect('${c.id}')"></div>
+    const idArg = jsArg(c.id);
+    return `<div class="case-item ${rowClass} ${activeCaseId===c.id?'selected':''}" onclick="showCase(${idArg})">
+      <div class="case-cb ${isSelected?'checked':''}" onclick="event.stopPropagation();toggleSelect(${idArg})"></div>
       <div class="case-info">
-        <div class="case-id">${c.id}</div>
-        <div class="case-type">${c.type} · ${c.area}</div>
+        <div class="case-id">${escHtml(c.id)}</div>
+        <div class="case-type">${escHtml(c.type)} · ${escHtml(c.area)}</div>
         <div class="case-meta">
           <span class="risk-badge ${badgeClass}">${statusLabel(c)}</span>${reopenTag}
           <span class="last-visit ${overdue?'overdue':''}">${c.status==='closed' ? '' : (overdue?'⚠ 已逾期 '+days+'天':'上訪 '+days+'天前')}</span>
@@ -1948,11 +2793,11 @@ function renderTimeline(c){
   el.innerHTML = c.history.map((h,i) => {
     const col = riskColor(h.risk);
     const hidden = (i>=2 && !timelineExpanded) ? 'tl-hidden' : '';
-    return `<div class="tl-item clickable ${hidden}" onclick="openRecordDetail('${c.id}',${i})">
+    return `<div class="tl-item clickable ${hidden}" onclick="openRecordDetail(${jsArg(c.id)},${i})">
       <div class="tl-dot" style="background:${col}"></div>
       <div class="tl-content">
-        <div class="tl-top"><span class="tl-date">${h.date}</span><span class="tl-worker">${h.worker}</span></div>
-        <div class="tl-summary">${h.summary}</div>
+        <div class="tl-top"><span class="tl-date">${escHtml(h.date)}</span><span class="tl-worker">${escHtml(h.worker)}</span></div>
+        <div class="tl-summary">${escHtml(h.summary)}</div>
       </div>
     </div>`;
   }).join('');
@@ -1987,48 +2832,16 @@ function renderGenogram(g){
 
   let lines = '', symbols = '', householdCircle = '';
 
-  // 同住圈：把所有同住成員「合成同一個圈」。
-  // 做法：用最短連線把所有同住成員串成一體，沿連線畫出一個粗的圓角區塊，再描邊，
-  // 因此不論同住者分在哪一代、是否相鄰，都只會是「一個」連通的圈。
   const householdMembers = g.members.filter(m=>m.sameHousehold);
   if(householdMembers.length > 0){
-    window.__hhSeq = (window.__hhSeq||0) + 1;
-    const hid = 'hh' + window.__hhSeq;
-    const R = SYM/2 + 14;
-    const pts = householdMembers.map(m=>({x:cx(m), y:cy(m)}));
-    // 最小生成樹（Prim）：用最短的線把全部同住者連成一體
-    const segs = [];
-    const inT = [0];
-    const rest = pts.map((_,i)=>i).slice(1);
-    while(rest.length){
-      let best=null;
-      inT.forEach(i=>rest.forEach(j=>{
-        const d = Math.hypot(pts[i].x-pts[j].x, pts[i].y-pts[j].y);
-        if(!best || d<best.d) best={i,j,d};
-      }));
-      segs.push([pts[best.i], pts[best.j]]);
-      inT.push(best.j);
-      rest.splice(rest.indexOf(best.j),1);
-    }
-    const draw = (w,color) => {
-      let out = pts.map(p=>`<circle cx="${p.x}" cy="${p.y}" r="${w/2}" fill="${color}"/>`).join('');
-      out += segs.map(([p,q])=>`<line x1="${p.x}" y1="${p.y}" x2="${q.x}" y2="${q.y}" stroke="${color}" stroke-width="${w}" stroke-linecap="round"/>`).join('');
-      return out;
-    };
-    const topY = Math.min(...pts.map(p=>p.y)) - R - 4;
-    const labelP = pts.reduce((a,p)=> (p.y<a.y || (p.y===a.y && p.x<a.x)) ? p : a, pts[0]);
-    householdCircle =
-      `<g pointer-events="none"><defs>
-        <mask id="${hid}o" maskUnits="userSpaceOnUse" x="0" y="0" width="${width}" height="${height}">
-          <g>${draw(R*2+4,'#fff')}</g><g>${draw(R*2,'#000')}</g>
-        </mask>
-        <mask id="${hid}f" maskUnits="userSpaceOnUse" x="0" y="0" width="${width}" height="${height}">
-          <g>${draw(R*2,'#fff')}</g>
-        </mask>
-      </defs>
-      <rect x="0" y="0" width="${width}" height="${height}" fill="rgba(148,163,184,0.12)" mask="url(#${hid}f)"/>
-      <rect x="0" y="0" width="${width}" height="${height}" fill="#64748b" mask="url(#${hid}o)"/>
-      <text x="${labelP.x}" y="${Math.max(11, topY-3)}" text-anchor="middle" font-size="10" fill="#475569" font-weight="700">同住</text></g>`;
+    const xs = householdMembers.map(cx), ys = householdMembers.map(cy);
+    const minX = Math.max(6, Math.min(...xs) - SYM/2 - 16);
+    const maxXv = Math.min(width-6, Math.max(...xs) + SYM/2 + 16);
+    const minY = Math.max(18, Math.min(...ys) - SYM/2 - 26);
+    const maxYv = Math.min(height-6, Math.max(...ys) + SYM/2 + 30);
+    const ecx = (minX+maxXv)/2, ecy = (minY+maxYv)/2, erx = (maxXv-minX)/2, ery = (maxYv-minY)/2;
+    householdCircle = `<ellipse cx="${ecx}" cy="${ecy}" rx="${erx}" ry="${ery}" fill="rgba(148,163,184,0.08)" stroke="#94a3b8" stroke-width="2" stroke-dasharray="6 5"/>
+      <text x="${ecx}" y="${minY-6}" text-anchor="middle" font-size="9.5" fill="#64748b" font-weight="700">同住</text>`;
   }
 
   // 同一人若有多段「無登記配偶」關係（b為null，例如未婚生子、多任伴侶），
@@ -2115,7 +2928,7 @@ function renderGenogram(g){
     let ly = y + SYM/2 + 15;
     symbols += `<text x="${x}" y="${ly}" text-anchor="middle" font-size="11" font-weight="600" fill="#1e293b">${escHtml(m.name)}</text>`;
     ly += 13;
-    if(m.age){
+    if(m.age !== null && m.age !== undefined && m.age !== ''){
       symbols += `<text x="${x}" y="${ly}" text-anchor="middle" font-size="9.5" fill="#64748b">${m.age}歲</text>`;
       ly += 12;
     }
@@ -2254,35 +3067,38 @@ function openRecordDetail(caseId, idx){
   // TAB 基本資料（不受idx影響，個案層級資料一律顯示）
   document.getElementById('m-basic').innerHTML = `
     <div class="m-grid">
-      <div class="m-field"><div class="m-field-l">性別</div><div class="m-field-v">${c.gender}</div></div>
+      <div class="m-field"><div class="m-field-l">性別</div><div class="m-field-v">${escHtml(c.gender)}</div></div>
       <div class="m-field"><div class="m-field-l">年齡</div><div class="m-field-v">${(c.age!==null && c.age!==undefined) ? c.age+' 歲' : '—'}</div></div>
-      <div class="m-field"><div class="m-field-l">同住狀況</div><div class="m-field-v">${c.household}</div></div>
-      <div class="m-field"><div class="m-field-l">居住型態</div><div class="m-field-v">${c.living}</div></div>
-      <div class="m-field"><div class="m-field-l">開案日期</div><div class="m-field-v">${c.open}</div></div>
-      <div class="m-field"><div class="m-field-l">負責社工</div><div class="m-field-v">${c.worker}</div></div>
+      <div class="m-field"><div class="m-field-l">同住狀況</div><div class="m-field-v">${escHtml(c.household)}</div></div>
+      <div class="m-field"><div class="m-field-l">居住型態</div><div class="m-field-v">${escHtml(c.living)}</div></div>
+      <div class="m-field"><div class="m-field-l">開案日期</div><div class="m-field-v">${escHtml(c.open)}</div></div>
+      <div class="m-field"><div class="m-field-l">負責社工</div><div class="m-field-v">${escHtml(c.worker)}</div></div>
     </div>
     <div class="m-section" style="margin-top:12px;margin-bottom:0">
       <div class="m-sec-title">開案緣由</div>
-      <div class="m-text-block">${c.openReason}</div>
+      <div class="m-text-block">${escHtml(c.openReason)}</div>
     </div>`;
 
   // TAB 家系圖（不受idx影響）
   const genoEl = document.getElementById('m-genogram');
-  if(c.genogram && c.genogram.members && c.genogram.members.length){
+  const genoSvg = caseGenogramSVG(c);
+  if(genoSvg){
     genoEl.innerHTML = `
-      <div class="geno-wrap">${renderGenogram(c.genogram)}</div>
+      <div class="geno-wrap">${genoSvg}</div>
       <div class="geno-legend">
         <div class="gl-item"><svg width="16" height="16"><rect x="2" y="2" width="12" height="12" fill="white" stroke="#1e293b" stroke-width="2"/></svg>男性</div>
         <div class="gl-item"><svg width="16" height="16"><circle cx="8" cy="8" r="6" fill="white" stroke="#1e293b" stroke-width="2"/></svg>女性</div>
         <div class="gl-item"><svg width="18" height="16"><line x1="2" y1="13" x2="14" y2="3" stroke="#ef4444" stroke-width="2"/></svg>已故</div>
-        <div class="gl-item"><span class="gl-line"></span>婚姻關係</div>
-        <div class="gl-item"><span class="gl-line dashed"></span>同居伴侶</div>
-        <div class="gl-item"><svg width="18" height="16"><line x1="3" y1="3" x2="13" y2="13" stroke="#475569" stroke-width="2"/></svg>分居／離異</div>
+        <div class="gl-item"><span class="gl-line"></span>婚姻</div>
+        <div class="gl-item"><span class="gl-line dashed"></span>同居</div>
+        <div class="gl-item"><svg width="22" height="16"><line x1="0" y1="8" x2="22" y2="8" stroke="#1e293b" stroke-width="2"/><line x1="9" y1="12" x2="13" y2="4" stroke="#1e293b" stroke-width="2"/></svg>分居</div>
+        <div class="gl-item"><svg width="22" height="16"><line x1="0" y1="8" x2="22" y2="8" stroke="#1e293b" stroke-width="2"/><line x1="7" y1="12" x2="11" y2="4" stroke="#1e293b" stroke-width="2"/><line x1="11" y1="12" x2="15" y2="4" stroke="#1e293b" stroke-width="2"/></svg>離婚</div>
         <div class="gl-item"><span class="gl-box-blue"></span>本案當事人</div>
-        <div class="gl-item"><svg width="20" height="14"><ellipse cx="10" cy="7" rx="9" ry="6" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="3 3"/></svg>同住圈</div>
+        <div class="gl-item"><svg width="20" height="14"><rect x="1" y="1" width="18" height="12" rx="6" fill="#c28a1b" fill-opacity="0.12" stroke="#c28a1b" stroke-width="1.3"/></svg>同住（全部圈在同一個圈）</div>
+        <div class="gl-item"><svg width="18" height="14"><rect x="2" y="1" width="14" height="12" rx="3" fill="#f3f4f6" stroke="#9aa3ad" stroke-dasharray="3 3"/></svg>未建檔（系統補位）</div>
       </div>`;
   } else {
-    genoEl.innerHTML = `<div class="geno-empty">📋 本案家系圖尚待建立<br><span style="font-size:10px;color:#94a3b8">（編輯個案時可在「家系圖」欄位新增成員與關係）</span></div>`;
+    genoEl.innerHTML = `<div class="geno-empty">📋 本案家系圖尚待建立<br><span style="font-size:10px;color:#94a3b8">（編輯個案時，在「家系圖」欄位填入家人與關係，就會自動畫出）</span></div>`;
   }
 
   if(isOverview){
@@ -2296,7 +3112,7 @@ function openRecordDetail(caseId, idx){
     });
     document.getElementById('m-plan').innerHTML = `
       <div class="geno-empty">尚無訪視紀錄，新增第一筆訪視紀錄後即可查看四面項評估與處遇計畫<br>
-        <button class="form-btn primary" style="margin-top:10px;width:auto;padding:8px 18px;display:inline-block;" onclick="closeRecordDetail();openVisitForm('${caseId}')">＋ 新增第一筆訪視紀錄</button>
+        <button class="form-btn primary" style="margin-top:10px;width:auto;padding:8px 18px;display:inline-block;" onclick="closeRecordDetail();openVisitForm(${jsArg(caseId)})">＋ 新增第一筆訪視紀錄</button>
       </div>`;
   } else {
     const d = getRecordDetail(c,h,idx);
@@ -2304,7 +3120,7 @@ function openRecordDetail(caseId, idx){
     document.getElementById('m-duration').textContent = `約 ${d.duration} 分鐘`;
     document.getElementById('m-subjective').textContent = d.subjective;
     document.getElementById('m-objective').textContent = d.objective;
-    document.getElementById('m-services').innerHTML = d.services.map(s=>`<span class="m-service-tag">${s}</span>`).join('');
+    document.getElementById('m-services').innerHTML = d.services.map(s=>`<span class="m-service-tag">${escHtml(s)}</span>`).join('');
     document.getElementById('m-bio').textContent = d.bio;
     document.getElementById('m-psycho').textContent = d.psycho;
     document.getElementById('m-social').textContent = d.social;
@@ -2319,8 +3135,8 @@ function openRecordDetail(caseId, idx){
       const p = d.plan[k];
       const sc = statusClassMap[p.status] || 'st-cont';
       return `<div class="plan-row">
-        <div class="plan-top"><span class="plan-label">${label}</span><span class="plan-status ${sc}">${p.status}</span></div>
-        <div class="plan-text">${p.text}</div>
+        <div class="plan-top"><span class="plan-label">${label}</span><span class="plan-status ${sc}">${escHtml(p.status)}</span></div>
+        <div class="plan-text">${escHtml(p.text)}</div>
       </div>`;
     }).join('');
   }
@@ -2338,296 +3154,211 @@ function closeRecordDetail(){
 // ═══════════════════════════════
 
 // ═══════════════════════════════
-// 家系圖建構工具（填表單自動排版，不需手動輸入座標）
+// 家系圖建構工具（只填關係，由引擎自動長出家系圖）
 // ═══════════════════════════════
 
 function escHtml(s){
   return String(s ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 }
+// 把字串安全地放進 onclick="fn(...)" 的參數（案號含引號也不會壞掉）
+function jsArg(s){ return escHtml(JSON.stringify(String(s ?? ''))); }
 
-function updateGenoMemberField(id, field, value){
-  const m = cfGenoMembers.find(x=>x.id===id);
-  if(m) m[field] = value;
-  renderGenoPreview();
+const FAM_GROUPS = [
+  ['core','核心家人'],
+  ['ext','延伸親屬（自動接到父母／配偶身上）'],
+  ['rel','指定「某人」的親屬（例：叔叔的兒子＝堂兄弟）'],
+  ['other','其他']
+];
+const FAM_QUICK = [['father','＋父親'],['mother','＋母親'],['spouse','＋配偶'],['son','＋兒子'],['daughter','＋女兒'],['brother','＋兄弟'],['sister','＋姊妹'],['gf_f','＋祖父'],['gm_f','＋祖母'],['uncle_f','＋伯叔'],['aunt_m','＋阿姨'],['c_son','＋○○的兒子']];
+
+function famIndexGender(){ const v=document.getElementById('cf-gender').value; return v==='男'?'M':v==='女'?'F':'U'; }
+function famIndexAge(){ const v=parseInt(document.getElementById('cf-age').value); return Number.isNaN(v)?undefined:v; }
+function famOpp(g){ return g==='M'?'F':g==='F'?'M':''; }
+function famNewId(){ return 'f'+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+
+function famApplyRel(r){
+  const d = GENO.REL[r.rel];
+  if(!d) return;
+  r.gender = d.g || r.gender || ((d.kind==='partner' && d.anchor==='index') ? famOpp(famIndexGender()) : '');
+  if(d.anchor==='of' && !r.of) r.of = 'index';
+  if(d.anchor!=='of') r.of = '';
+}
+function famAddRow(rel){
+  const r = {id:famNewId(), rel:rel||'', of:'', gender:'', age:'', deceased:false, coRes:false, note:'', more:false};
+  famApplyRel(r);
+  famRows.push(r);
+  famRenderRows();
 }
 
-function unionTypeLabel(t){
-  return {married:'婚姻', divorced:'離婚', separated:'分居', partner:'同居伴侶'}[t] || t;
+// 組出給引擎的資料（案主性別／年齡直接取自表單上方欄位）
+function famInput(){
+  const rel = famRows.filter(r=>GENO.REL[r.rel]).map(r=>{
+    const o = {id:r.id, rel:r.rel};
+    if(r.of) o.of = r.of;
+    if(r.gender) o.gender = r.gender;
+    if(r.age!=='' && r.age!=null && !Number.isNaN(+r.age)) o.age = +r.age;
+    if(r.deceased) o.deceased = true;
+    if(r.coRes) o.coRes = true;
+    if(r.tie) o.tie = r.tie;
+    if(r.adopted) o.adopted = true;
+    if(r.with) o.with = r.with;
+    if(r.half) o.half = r.half;
+    if(r.stype) o.stype = r.stype;
+    if(r.label) o.label = r.label;
+    if(r.note) o.note = r.note;
+    return o;
+  });
+  return {index:{gender:famIndexGender(), age:famIndexAge(), coRes:famIxCo}, parentsStatus:famParents, relatives:rel};
 }
 
-function memberOptions(selectedId, allowNone){
-  let opts = allowNone ? `<option value="" ${!selectedId?'selected':''}>（無／單親）</option>` : '';
-  opts += cfGenoMembers.map(m => `<option value="${m.id}" ${m.id===selectedId?'selected':''}>${escHtml(m.name||'未命名成員')}</option>`).join('');
-  return opts;
+// 供顯示用：案主性別／年齡永遠以個案本身欄位為準
+function caseGenogramSVG(c){
+  try{
+    if(c.family){
+      const f = Object.assign({}, c.family, {index: Object.assign({}, c.family.index, {
+        gender: c.gender==='男'?'M':c.gender==='女'?'F':'U',
+        age: (c.age===null||c.age===undefined||c.age==='') ? undefined : c.age
+      })});
+      return GENO.toSVG(GENO.build(f));
+    }
+    if(c.genogram && c.genogram.members && c.genogram.members.length) return renderGenogram(c.genogram);
+  }catch(e){ console.error('家系圖產生失敗', e); }
+  return '';
 }
 
-// 即時預覽：用目前建構工具裡的成員/關係資料，直接跑一次自動排版並畫出來
-function renderGenoPreview(){
-  const el = document.getElementById('cf-geno-preview');
-  if(!el) return;
-  if(cfGenoMembers.length === 0){
-    el.innerHTML = '<div class="geno-empty">尚未新增任何成員，畫面會在你新增成員後即時顯示</div>';
+function famRelOptions(sel){
+  let h = '<option value="">— 選擇關係 —</option>';
+  FAM_GROUPS.forEach(([k,t])=>{
+    h += '<optgroup label="'+t+'">';
+    Object.keys(GENO.REL).filter(x=>GENO.REL[x].grp===k).forEach(x=>{
+      h += '<option value="'+x+'"'+(x===sel?' selected':'')+'>'+GENO.REL[x].zh+'</option>';
+    });
+    h += '</optgroup>';
+  });
+  return h;
+}
+function famSel(k,id,opts,val){
+  return '<select data-k="'+k+'" data-id="'+escHtml(id)+'">'+opts.map(o=>'<option value="'+o[0]+'"'+(o[0]===(val||'')?' selected':'')+'>'+o[1]+'</option>').join('')+'</select>';
+}
+function famRowHTML(r,i){
+  const d = GENO.REL[r.rel];
+  const id = escHtml(r.id);
+  const needOf = d && d.anchor==='of';
+  const isChild = d && d.kind==='child';
+  const isSib = d && d.kind==='sibling' && d.anchor==='index';
+  const stypeOK = d && d.kind==='partner' && ['c_spouse','stepfather','stepmother'].includes(r.rel);
+  let h = '<div class="fam-row"><div class="fam-l1'+(needOf?'':' noof')+'"><span class="fam-num">'+(i+1)+'</span>';
+  h += '<select data-k="rel" data-id="'+id+'">'+famRelOptions(r.rel)+'</select>';
+  if(needOf) h += '<select data-k="of" data-id="'+id+'" title="這位是「誰」的親屬？"></select>';
+  h += '<button type="button" class="geno-del" style="margin:0" data-del="'+id+'" title="刪除這列">✕</button></div>';
+  h += '<div class="fam-derived" data-derived="'+id+'"></div>';
+  h += '<div class="fam-l2">';
+  h += (d && d.g) ? '<select disabled><option>'+(d.g==='M'?'男':'女')+'</option></select>'
+                  : famSel('gender',r.id,[['','性別？'],['M','男'],['F','女'],['U','不詳']],r.gender);
+  h += '<input type="number" min="0" max="120" placeholder="歲" data-k="age" data-id="'+id+'" value="'+escHtml(r.age)+'">';
+  h += '<label class="geno-chk"><input type="checkbox" data-k="deceased" data-id="'+id+'"'+(r.deceased?' checked':'')+'>已歿</label>';
+  h += '<label class="geno-chk"><input type="checkbox" data-k="coRes" data-id="'+id+'"'+(r.coRes?' checked':'')+'>同住</label>';
+  h += '<input class="fam-note" type="text" placeholder="備註（選填）" data-k="note" data-id="'+id+'" value="'+escHtml(r.note||'')+'">';
+  h += '</div>';
+  h += '<button type="button" class="fam-tog" data-tog="'+id+'">'+(r.more?'▾ 收合進階選項':'▸ 進階選項（關係品質、領養、半手足…）')+'</button>';
+  h += '<div class="fam-more'+(r.more?'':' hide')+'">';
+  h += '<label class="fam-f">與案主的關係品質'+famSel('tie',r.id,[['','（不標示）'],['close','親密'],['distant','疏離'],['conflict','衝突'],['cutoff','斷絕往來']],r.tie)+'</label>';
+  h += '<label class="fam-f">自訂稱謂（選填）<input type="text" data-k="label" data-id="'+id+'" placeholder="例：二姨婆" value="'+escHtml(r.label||'')+'"></label>';
+  if(isSib) h += '<label class="fam-f">手足類型'+famSel('half',r.id,[['','同父同母'],['f','同父異母'],['m','同母異父']],r.half)+'</label>';
+  if(isChild || (isSib && r.half)) h += '<label class="fam-f">另一位家長（子女才需要）<select data-k="with" data-id="'+id+'"></select></label>';
+  if(stypeOK) h += '<label class="fam-f">與對象的關係'+famSel('stype',r.id,[['','婚姻中'],['partner','同居'],['separated','分居'],['divorced','已離婚']],r.stype)+'</label>';
+  if(isChild || r.rel==='father' || r.rel==='mother') h += '<label class="geno-chk" style="align-self:end"><input type="checkbox" data-k="adopted" data-id="'+id+'"'+(r.adopted?' checked':'')+'>領養／收養（虛線）</label>';
+  h += '</div></div>';
+  return h;
+}
+function famRenderRows(){
+  const el = document.getElementById('cf-fam-rows');
+  el.innerHTML = famRows.length ? famRows.map(famRowHTML).join('') :
+    '<div class="geno-empty-hint">還沒有家人。點下方快速新增，或「新增一位親屬」。獨居或沒有親屬的案主可以直接儲存，家系圖只會顯示案主一人。</div>';
+  famRefresh();
+}
+
+// 更新預覽、稱謂回饋、「對象／另一位家長」下拉選單
+function famRefresh(){
+  const box = document.getElementById('cf-geno-preview');
+  const warn = document.getElementById('cf-fam-warn');
+  document.getElementById('cf-fam-pstat').value = famParents;
+  document.getElementById('cf-fam-ixco').checked = famIxCo;
+  let model;
+  try{
+    model = GENO.build(famInput());
+    box.innerHTML = GENO.toSVG(model);
+  }catch(e){
+    console.error(e);
+    box.innerHTML = '<div class="geno-empty">預覽產生失敗，請檢查親屬關係設定</div>';
     return;
   }
-  try{
-    const laidOut = autoLayoutGenogram(cfGenoMembers, cfGenoUnions);
-    el.innerHTML = renderGenogram(laidOut);
-  }catch(e){
-    el.innerHTML = '<div class="geno-empty">預覽產生失敗，請檢查成員與關係設定</div>';
-    console.warn('家系圖預覽錯誤', e);
-  }
-}
-
-function renderGenoBuilder(){
-  const mEl = document.getElementById('cf-geno-members-list');
-  if(!mEl) return;
-  mEl.innerHTML = cfGenoMembers.length ? cfGenoMembers.map(m => `
-    <div class="geno-row">
-      <input value="${escHtml(m.name)}" placeholder="稱謂，例如：父親" oninput="updateGenoMemberField('${m.id}','name',this.value)">
-      <select onchange="updateGenoMemberField('${m.id}','gender',this.value)">
-        <option value="F" ${m.gender==='F'?'selected':''}>女</option>
-        <option value="M" ${m.gender==='M'?'selected':''}>男</option>
-      </select>
-      <input type="number" placeholder="年齡" value="${m.age??''}" oninput="updateGenoMemberField('${m.id}','age', this.value?parseInt(this.value):null)">
-      <label class="geno-chk"><input type="checkbox" ${m.deceased?'checked':''} onchange="updateGenoMemberField('${m.id}','deceased',this.checked)">已故</label>
-      <label class="geno-chk"><input type="checkbox" ${m.sameHousehold?'checked':''} onchange="updateGenoMemberField('${m.id}','sameHousehold',this.checked)">同住</label>
-      <label class="geno-chk"><input type="radio" name="cf-geno-index" ${m.isIndex?'checked':''} onchange="setGenoIndex('${m.id}')">本案當事人</label>
-      <input value="${escHtml(m.note||'')}" placeholder="備註" oninput="updateGenoMemberField('${m.id}','note',this.value)">
-      <button type="button" class="geno-del" onclick="removeGenoMember('${m.id}')">✕</button>
-    </div>`).join('') : '<div class="geno-empty-hint">尚未新增家庭成員，點下方按鈕開始新增</div>';
-
-  const uEl = document.getElementById('cf-geno-unions-list');
-  if(!uEl) return;
-  uEl.innerHTML = cfGenoUnions.length ? cfGenoUnions.map(u => `
-    <div class="geno-union-row">
-      <select onchange="updateGenoUnionField('${u.id}','a',this.value)">${memberOptions(u.a)}</select>
-      <select onchange="updateGenoUnionField('${u.id}','b',this.value)">${memberOptions(u.b, true)}</select>
-      <select onchange="updateGenoUnionField('${u.id}','type',this.value)">
-        ${['married','divorced','separated','partner'].map(t=>`<option value="${t}" ${u.type===t?'selected':''}>${unionTypeLabel(t)}</option>`).join('')}
-      </select>
-      <button type="button" class="geno-del" onclick="removeGenoUnion('${u.id}')">✕</button>
-      <div class="geno-children-pick">子女：${cfGenoMembers.length ? cfGenoMembers.map(m=>`<label class="geno-chk"><input type="checkbox" ${u.children.includes(m.id)?'checked':''} onchange="toggleUnionChild('${u.id}','${m.id}',this.checked)">${escHtml(m.name||'未命名')}</label>`).join('') : '（請先新增成員）'}</div>
-    </div>`).join('') : '<div class="geno-empty-hint">尚未新增關係，點下方按鈕開始新增</div>';
-
-  renderGenoPreview();
-}
-
-function addGenoMember(){
-  cfGenoMembers.push({
-    id: 'g'+(cfGenoIdCounter++), name:'', gender:'F', age:null,
-    deceased:false, isIndex: cfGenoMembers.length===0, sameHousehold:false, note:'',
+  if(model.warnings.length){ warn.hidden = false; warn.innerHTML = '<b>請留意</b><ul>'+model.warnings.map(w=>'<li>'+escHtml(w)+'</li>').join('')+'</ul>'; }
+  else warn.hidden = true;
+  const disp = {}; model.persons.forEach(p=>{ disp[p.id] = p.display; });
+  famRows.forEach(r=>{
+    const el = document.querySelector('[data-derived="'+r.id+'"]');
+    if(el) el.textContent = (GENO.REL[r.rel] && disp[r.id]) ? '→ 系統判斷：'+disp[r.id] : '';
   });
-  renderGenoBuilder();
-}
-function removeGenoMember(id){
-  cfGenoMembers = cfGenoMembers.filter(m=>m.id!==id);
-  cfGenoUnions = cfGenoUnions.filter(u=>u.a!==id && u.b!==id);
-  cfGenoUnions.forEach(u=>{ u.children = u.children.filter(cid=>cid!==id); });
-  renderGenoBuilder();
-}
-function setGenoIndex(id){
-  cfGenoMembers.forEach(m=>{ m.isIndex = (m.id===id); });
-  renderGenoPreview();
-}
-function addGenoUnion(){
-  if(cfGenoMembers.length===0){ showToast('⚠ 請先新增至少一位成員'); return; }
-  cfGenoUnions.push({id:'u'+(cfGenoIdCounter++), a:cfGenoMembers[0].id, b:null, type:'married', children:[]});
-  renderGenoBuilder();
-}
-function removeGenoUnion(id){
-  cfGenoUnions = cfGenoUnions.filter(u=>u.id!==id);
-  renderGenoBuilder();
-}
-function updateGenoUnionField(id, field, value){
-  const u = cfGenoUnions.find(x=>x.id===id);
-  if(u) u[field] = value || null;
-  renderGenoPreview();
-}
-function toggleUnionChild(unionId, memberId, checked){
-  const u = cfGenoUnions.find(x=>x.id===unionId);
-  if(!u) return;
-  if(checked){ if(!u.children.includes(memberId)) u.children.push(memberId); }
-  else { u.children = u.children.filter(c=>c!==memberId); }
-  renderGenoPreview();
+  document.querySelectorAll('#cf-fam-rows select[data-k="of"], #cf-fam-rows select[data-k="with"]').forEach(sel=>{
+    const id = sel.dataset.id, k = sel.dataset.k, row = famRows.find(r=>r.id===id);
+    if(!row) return;
+    let h = k==='with' ? '<option value="">自動判斷</option>' : '';
+    h += '<option value="index">案主</option>';
+    famRows.forEach((o,i)=>{ if(o.id!==id && GENO.REL[o.rel]) h += '<option value="'+escHtml(o.id)+'">第'+(i+1)+'列 '+escHtml(disp[o.id]||GENO.REL[o.rel].zh)+'</option>'; });
+    sel.innerHTML = h;
+    const want = row[k] || (k==='of' ? 'index' : '');
+    sel.value = want;
+    if(sel.value !== want) sel.value = (k==='of' ? 'index' : '');
+  });
 }
 
-function loadGenogramIntoBuilder(g){
-  cfGenoMembers = [];
-  cfGenoUnions = [];
-  cfGenoIdCounter = 0;
-  if(g && g.members){
-    g.members.forEach(m => {
-      cfGenoMembers.push({
-        id: m.id, name: m.name||'', gender: m.gender||'F', age: m.age ?? null,
-        deceased: m.status==='deceased', isIndex: !!m.isIndex,
-        sameHousehold: !!m.sameHousehold, note: m.note||'',
-      });
-    });
-    (g.unions||[]).forEach((u,i) => {
-      cfGenoUnions.push({id:'uload'+i, a:u.a, b:u.b||null, type:u.type||'married', children:(u.children||[]).slice()});
-    });
-  }
-  renderGenoBuilder();
+function famOnEdit(e){
+  const t = e.target, k = t.dataset.k, id = t.dataset.id;
+  if(!k) return;
+  const r = famRows.find(x=>x.id===id); if(!r) return;
+  r[k] = (t.type==='checkbox') ? t.checked : t.value;
+  if(k==='rel'){ r.with=''; r.half=''; r.stype=''; r.adopted=false; famApplyRel(r); famRenderRows(); return; }
+  if(k==='half'){ famRenderRows(); return; }
+  famRefresh();
 }
 
-// 自動排版：依世代（父母／當事人／子女…）分配 x,y 座標，不需手動輸入
-// 決定同一世代成員的左右排列順序。
-// 一般情況下用配偶關係「串鏈」展開（A-B-C 表示 A 娶 B、B 又離婚後 C 再嫁給 A 這種狀況時，
-// 若某人有兩段婚姻關係，用鏈狀展開會自然把他/她排在兩位配偶中間，
-// 避免婚姻線畫出來時穿過中間人的圖示、造成視覺上誤判成另一段關係。
-function orderGenerationLevel(levelIds, unions){
-  const adj = {};
-  levelIds.forEach(id => { adj[id] = []; });
-  unions.forEach(u => {
-    if(u.b && levelIds.includes(u.a) && levelIds.includes(u.b)){
-      adj[u.a].push(u.b);
-      adj[u.b].push(u.a);
+function loadFamilyIntoBuilder(c){
+  const f = c && c.family;
+  famKeep = !!f;
+  famRows = f ? (f.relatives||[]).map(r => Object.assign({more: !!(r.tie||r.half||r.adopted||r.with||r.stype||r.label)}, JSON.parse(JSON.stringify(r)))) : [];
+  famParents = (f && f.parentsStatus) || 'married';
+  famIxCo = f ? (f.index && f.index.coRes) !== false : !/獨居/.test((c && c.household) || '');
+  famRenderRows();
+}
+
+(function famInit(){
+  const rowsEl = document.getElementById('cf-fam-rows');
+  rowsEl.addEventListener('input', famOnEdit);
+  rowsEl.addEventListener('change', famOnEdit);
+  rowsEl.addEventListener('click', e=>{
+    const t = e.target.closest('[data-del],[data-tog]'); if(!t) return;
+    if(t.dataset.del){
+      const id = t.dataset.del;
+      famRows = famRows.filter(r=>r.id!==id);
+      famRows.forEach(r=>{ if(r.of===id) r.of='index'; if(r.with===id) r.with=''; });
+      famRenderRows();
+    } else if(t.dataset.tog){
+      const r = famRows.find(x=>x.id===t.dataset.tog); if(r){ r.more = !r.more; famRenderRows(); }
     }
   });
-
-  const visited = new Set();
-  const result = [];
-  levelIds.forEach(startId => {
-    if(visited.has(startId)) return;
-    let chain = [startId];
-    visited.add(startId);
-    let side = 1; // 交替分配第3段以上的配偶到左/右側，避免被擠到最後面
-    let changed = true;
-    while(changed){
-      changed = false;
-      // 優先從鏈的兩端延伸（最常見的單段/雙段婚姻情境）
-      const tail = chain[chain.length - 1];
-      const tailNext = adj[tail].find(p => !visited.has(p));
-      if(tailNext){ chain.push(tailNext); visited.add(tailNext); changed = true; continue; }
-      const head = chain[0];
-      const headPrev = adj[head].find(p => !visited.has(p));
-      if(headPrev){ chain.unshift(headPrev); visited.add(headPrev); changed = true; continue; }
-      // 兩端都展開完了，檢查鏈中每個人是否還有第3段以上未展開的配偶關係，緊鄰插入
-      for(const id of chain.slice()){
-        const more = adj[id].find(p => !visited.has(p));
-        if(more){
-          const idx = chain.indexOf(id);
-          if(side > 0) chain.splice(idx + 1, 0, more); else chain.splice(idx, 0, more);
-          side *= -1;
-          visited.add(more);
-          changed = true;
-          break;
-        }
-      }
-    }
-    result.push(...chain);
+  const q = document.getElementById('cf-fam-quick');
+  FAM_QUICK.forEach(([rel,t])=>{
+    const b = document.createElement('button'); b.type='button'; b.textContent=t;
+    b.onclick = ()=>famAddRow(rel); q.appendChild(b);
   });
-  levelIds.forEach(id => { if(!visited.has(id)){ result.push(id); visited.add(id); } });
-  return result;
-}
-
-// 把還沒被排進 order 的人（通常是「嫁娶進來」、自己沒有血緣父母單位的配偶）
-// 插入到他／她在這一代裡的配偶旁邊，而不是被丟到整排最後面
-function insertSpousesAdjacent(order, levelIds, unions){
-  const result = order.slice();
-  const placed = new Set(result);
-  let changed = true;
-  while(changed){
-    changed = false;
-    for(const u of unions){
-      if(!u.b) continue;
-      const aIn = placed.has(u.a), bIn = placed.has(u.b);
-      if(aIn && !bIn && levelIds.includes(u.b)){
-        result.splice(result.indexOf(u.a) + 1, 0, u.b); placed.add(u.b); changed = true;
-      } else if(bIn && !aIn && levelIds.includes(u.a)){
-        result.splice(result.indexOf(u.b) + 1, 0, u.a); placed.add(u.a); changed = true;
-      }
-    }
-  }
-  levelIds.forEach(id => { if(!placed.has(id)){ result.push(id); placed.add(id); } });
-  return result;
-}
-
-// 依「上一代的家庭單位（婚姻/關係）」分群排列子女世代：
-// 同一段關係的手足會排在一起，不同段關係（同母異父、同父異母等）不會交錯，
-// 再把嫁娶進來、沒有血緣父母單位的配偶插入到對應另一半旁邊。
-function orderChildGeneration(levelIds, unions, prevOrder){
-  const placed = new Set();
-  const order = [];
-  const seenUnion = new Set();
-  prevOrder.forEach(pid => {
-    unions.forEach(u => {
-      if(seenUnion.has(u)) return;
-      if((u.a===pid || u.b===pid) && u.children && u.children.some(cid=>levelIds.includes(cid))){
-        seenUnion.add(u);
-        u.children.forEach(cid=>{
-          if(levelIds.includes(cid) && !placed.has(cid)){ order.push(cid); placed.add(cid); }
-        });
-      }
-    });
+  // 上方「性別／年齡」改了，家系圖預覽同步更新
+  ['cf-gender','cf-age'].forEach(id=>{
+    const el = document.getElementById(id);
+    el.addEventListener('input', ()=>{ if(document.getElementById('case-form-overlay').classList.contains('show')) famRefresh(); });
+    el.addEventListener('change', ()=>{ if(document.getElementById('case-form-overlay').classList.contains('show')) famRefresh(); });
   });
-  return insertSpousesAdjacent(order, levelIds, unions);
-}
-
-function autoLayoutGenogram(members, unions){
-  if(!members.length) return {members:[], unions:[]};
-  const byId = id => members.find(m=>m.id===id);
-  const gen = {};
-  const indexMember = members.find(m=>m.isIndex) || members[0];
-  gen[indexMember.id] = 0;
-
-  for(let pass=0; pass<10; pass++){
-    unions.forEach(u=>{
-      const aG = gen[u.a], bG = (u.b && gen[u.b]!==undefined) ? gen[u.b] : undefined;
-      if(aG!==undefined && u.b && bG===undefined) gen[u.b] = aG;
-      if(bG!==undefined && gen[u.a]===undefined) gen[u.a] = bG;
-      const parentGen = gen[u.a]!==undefined ? gen[u.a] : bG;
-      if(parentGen!==undefined){
-        u.children.forEach(cid=>{ if(gen[cid]===undefined) gen[cid] = parentGen+1; });
-      }
-      // 反向推算：若子女的世代已知、但父母的世代還沒定出來（例如當事人是父母輩，
-      // 祖父母等長輩世代只存在於「子女」關係中），往上推回父母的世代
-      if(u.children && u.children.length){
-        const knownChildGens = u.children.map(cid=>gen[cid]).filter(v=>v!==undefined);
-        if(knownChildGens.length){
-          const inferredParentGen = Math.min(...knownChildGens) - 1;
-          if(gen[u.a]===undefined) gen[u.a] = inferredParentGen;
-          if(u.b && gen[u.b]===undefined) gen[u.b] = inferredParentGen;
-        }
-      }
-    });
-  }
-  members.forEach(m=>{ if(gen[m.id]===undefined) gen[m.id] = gen[indexMember.id]; });
-
-  const genVals = Object.values(gen);
-  const minGen = Math.min(...genVals);
-  Object.keys(gen).forEach(k => gen[k] -= minGen);
-  const maxGen = Math.max(...Object.values(gen));
-
-  const positioned = [];
-  let prevOrder = [];
-  for(let g=0; g<=maxGen; g++){
-    const levelIds = members.filter(m=>gen[m.id]===g).map(m=>m.id);
-    // 最上層世代（沒有更上一代可依附）用配偶關係鏈展開；
-    // 其餘世代依上一代的家庭單位分群，讓同段關係的手足排在一起、不同段關係不交錯
-    const ordered = (g===0 || prevOrder.length===0)
-      ? orderGenerationLevel(levelIds, unions)
-      : orderChildGeneration(levelIds, unions, prevOrder);
-    ordered.forEach((id,idx)=>{
-      const m = byId(id);
-      positioned.push({...m, x: idx, y: g});
-    });
-    prevOrder = ordered;
-  }
-
-  return {
-    members: positioned.map(m => {
-      const out = {id:m.id, name:m.name||'成員', gender:m.gender||'F', x:m.x, y:m.y};
-      if(m.age!==null && m.age!==undefined && m.age!=='') out.age = typeof m.age==='number' ? m.age : parseInt(m.age);
-      if(m.deceased) out.status = 'deceased';
-      if(m.isIndex) out.isIndex = true;
-      if(m.sameHousehold) out.sameHousehold = true;
-      if(m.note) out.note = m.note;
-      return out;
-    }),
-    unions: unions.map(u => ({a:u.a, b:u.b||null, type:u.type, children:u.children.slice()})),
-  };
-}
+})();
 
 function openCaseForm(caseId){
   caseFormEditId = caseId || null;
@@ -2656,7 +3387,7 @@ function openCaseForm(caseId){
     document.getElementById('cf-address').value = c.address||'';
     document.getElementById('cf-lat').value = c.lat;
     document.getElementById('cf-lon').value = c.lon;
-    loadGenogramIntoBuilder(c.genogram);
+    loadFamilyIntoBuilder(c);
   } else {
     title.textContent = '新增個案';
     ['cf-id','cf-type','cf-area','cf-worker','cf-age','cf-household','cf-living','cf-reason','cf-lastvisit','cf-address'].forEach(id=>document.getElementById(id).value='');
@@ -2666,11 +3397,11 @@ function openCaseForm(caseId){
     document.getElementById('cf-risk').value = 'watch';
     document.getElementById('cf-freq').value = 14;
     document.getElementById('cf-gender').value = '女';
-    document.getElementById('cf-open').value = new Date().toISOString().slice(0,10);
+    document.getElementById('cf-open').value = localDateStr();
     const c = map.getCenter();
     document.getElementById('cf-lat').value = c.lat.toFixed(4);
     document.getElementById('cf-lon').value = c.lng.toFixed(4);
-    loadGenogramIntoBuilder(null);
+    loadFamilyIntoBuilder(null);
   }
   document.getElementById('cf-pick-btn').classList.remove('active');
   document.getElementById('cf-geocode-hint').textContent = '輸入地址後點「查詢座標」，會自動幫你帶入對應的地圖座標（使用 OpenStreetMap 免費地址查詢服務）';
@@ -2731,6 +3462,10 @@ function submitCaseForm(){
   const type = document.getElementById('cf-type').value.trim();
   if(!id || !type){ showToast('⚠ 案號與服務類型為必填'); return; }
   if(!caseFormEditId && CASES.find(x=>x.id===id)){ showToast('⚠ 這個案號已經存在了'); return; }
+  const lat = parseFloat(document.getElementById('cf-lat').value);
+  const lon = parseFloat(document.getElementById('cf-lon').value);
+  if(!Number.isFinite(lat) || !Number.isFinite(lon)){ showToast('⚠ 請填寫有效的緯度與經度'); return; }
+  const ageNum = parseInt(document.getElementById('cf-age').value);
 
   const data = {
     id, type,
@@ -2741,17 +3476,17 @@ function submitCaseForm(){
     risk: document.getElementById('cf-risk').value,
     freqDays: parseInt(document.getElementById('cf-freq').value)||14,
     gender: document.getElementById('cf-gender').value,
-    age: parseInt(document.getElementById('cf-age').value)||null,
+    age: Number.isNaN(ageNum) ? null : ageNum,
     household: document.getElementById('cf-household').value.trim(),
     living: document.getElementById('cf-living').value.trim(),
     open: document.getElementById('cf-open').value,
     lastVisit: document.getElementById('cf-lastvisit').value || document.getElementById('cf-open').value,
     openReason: document.getElementById('cf-reason').value.trim(),
     address: document.getElementById('cf-address').value.trim(),
-    lat: parseFloat(document.getElementById('cf-lat').value),
-    lon: parseFloat(document.getElementById('cf-lon').value),
-    genogram: cfGenoMembers.length > 0 ? autoLayoutGenogram(cfGenoMembers, cfGenoUnions) : null,
+    lat, lon,
   };
+  // 有填家人（或本來就有家系圖）才存；存新格式時一併清掉舊的手動座標格式
+  if(famRows.some(r=>GENO.REL[r.rel]) || famKeep){ data.family = famInput(); data.genogram = null; }
 
   const isNewCase = !caseFormEditId;
   if(caseFormEditId){
@@ -2841,7 +3576,7 @@ function openVisitForm(caseId, idx=null){
     ['vf-worker','vf-summary','vf-method','vf-duration','vf-services','vf-subjective','vf-objective',
      'vf-bio','vf-psycho','vf-social','vf-eco','vf-swot-s','vf-swot-w','vf-swot-o','vf-swot-t',
      'vf-plan-short-text','vf-plan-mid-text','vf-plan-long-text'].forEach(id=>document.getElementById(id).value='');
-    document.getElementById('vf-date').value = new Date().toISOString().slice(0,10);
+    document.getElementById('vf-date').value = localDateStr();
     document.getElementById('vf-worker').value = c.worker||'';
     document.getElementById('vf-risk').value = c.risk||'watch';
     document.getElementById('vf-plan-short-status').value = '新增';
@@ -2895,16 +3630,25 @@ function submitVisitForm(){
 
   if(visitFormIdx !== null){
     c.history[visitFormIdx] = record;
-    showToast('✓ 訪視紀錄已更新');
   } else {
-    c.history.unshift(record);
-    c.lastVisit = date;
-    c.risk = record.risk;
-    showToast('✓ 已新增訪視紀錄');
+    c.history.push(record);
   }
+  syncCaseFromHistory(c);
+  showToast(visitFormIdx !== null ? '✓ 訪視紀錄已更新' : '✓ 已新增訪視紀錄');
   closeVisitForm();
   activeCaseId = c.id;
   refreshAll();
+}
+
+// 讓訪視紀錄依日期由新到舊排列，並以最新一筆更新「上次訪視」與風險等級
+function syncCaseFromHistory(c){
+  c.history.sort((a, b) => String(b.date).localeCompare(String(a.date)));
+  if(c.history.length){
+    c.lastVisit = c.history[0].date;
+    c.risk = c.history[0].risk;
+  } else {
+    c.lastVisit = c.open;
+  }
 }
 
 function editCurrentRecord(){
@@ -2918,10 +3662,7 @@ function deleteCurrentRecord(){
   if(!c) return;
   if(!confirm('確定要刪除這筆訪視紀錄嗎？此動作無法復原。')) return;
   c.history.splice(currentRecordIdx, 1);
-  if(c.history.length>0){
-    c.lastVisit = c.history[0].date;
-    c.risk = c.history[0].risk;
-  }
+  syncCaseFromHistory(c);
   closeRecordDetail();
   showToast('✓ 已刪除訪視紀錄');
   activeCaseId = c.id;
@@ -2939,20 +3680,7 @@ function toggleSelect(id){
   if(activeCaseId===id){
     document.getElementById('d-route-txt').textContent = selected.has(id)?'✓ 已加入路線（點擊移除）':'＋ 加入今日路線';
   }
-  CASES.forEach(c => {
-    const m = markers[c.id];
-    const bg = markerBackground(c);
-    const inRoute = selected.has(c.id);
-    const html = `<div style="
-      width:${inRoute?20:18}px;height:${inRoute?20:18}px;border-radius:50%;
-      background:${bg};
-      border:${inRoute?'3px solid #2563eb':'2.5px solid white'};
-      box-shadow:${inRoute?'0 0 0 2px rgba(37,99,235,.3),':''}0 2px 6px rgba(0,0,0,.25);
-      transition:all .15s;
-    "></div>`;
-    const icon = L.divIcon({html, iconSize:[inRoute?20:18,inRoute?20:18], iconAnchor:[inRoute?10:9,inRoute?10:9], className:''});
-    m.setIcon(icon);
-  });
+  CASES.forEach(c => { if(markers[c.id]) markers[c.id].setIcon(markerIcon(c)); });
 }
 
 function toggleRoute(){
@@ -3020,7 +3748,7 @@ function populateWorkerFilter(){
   const workers = Array.from(new Set(CASES.map(c=>c.worker).filter(Boolean))).sort();
   const prevValue = sel.value || 'all';
   sel.innerHTML = '<option value="all">全部社工</option>' +
-    workers.map(w => `<option value="${w}">${w}</option>`).join('');
+    workers.map(w => `<option value="${escHtml(w)}">${escHtml(w)}</option>`).join('');
   sel.value = workers.includes(prevValue) ? prevValue : 'all';
 }
 
